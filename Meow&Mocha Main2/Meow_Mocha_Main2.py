@@ -93,9 +93,19 @@ class Booking:
     def completeBooking(self):
         pass
 
- #--system functions (generating primary keys, creating list
+ #---- system functions (generating primary keys, creating lists) ----
+
 class SystemManager:
-    pass
+    def init(self) -> None:
+        self.customers: list[Customer] = []
+        self.staff: list[Staff] = []
+        self.timeslots: list[TimeSlot] = []
+        self.bookings: list[Booking] = []
+
+        self.next_customer_id: int = 1
+        self.next_staff_id: int = 1
+        self.next_timeslot_id: int = 1
+        self.next_booking_id: int = 1
 
 def generateCustomerID(self) -> str:
     cID = f"C{self.next_customer_id:05d}"
