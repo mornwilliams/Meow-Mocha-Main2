@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 import csv
 import pickle
 import os
@@ -43,7 +43,8 @@ class Customer:
     phone_number:str
     password_hash:str
 
-    #editing methods
+    def editCustomerDetails():
+        pass
 
 @dataclass
 class Staff:
@@ -57,6 +58,8 @@ class Staff:
     higher_admin:bool
 
     #editing methods here
+    def editStaffDetails():
+        pass
 
 @dataclass
 class TimeSlot:
@@ -68,6 +71,11 @@ class TimeSlot:
     is_available: bool=True
 
     #duration method here
+    def duration(self) -> timedelta:
+        dt_start = datetime.combine(self.date, self.start_time)
+        dt_end = datetime.combine(self.date, self.end_time)
+        return dt_end - dt_start
+        
 
 @dataclass
 class Booking:  
@@ -79,20 +87,36 @@ class Booking:
     booking_timestamp: datetime = field(default_factory=datetime.now)
 
     #cancel method here
+    def cancelBooking(self):
+        pass
     #complete method here
+    def completeBooking(self):
+        pass
 
  #--system functions (generating primary keys, creating list
-class SystemFunctions:
+class SystemManager:
     pass
 
-def generateCustomerID():
-    pass
-def generateStaffID():
-    pass
-def generateTimeSlotID():
-    pass
-def generateBookingID():
-    pass
+def generateCustomerID(self) -> str:
+    cID = f"C{self.next_customer_id:05d}"
+    self.next_customer_id += 1
+    return cID
+
+def generateStaffID(self) -> str:   
+    sID = f"S{self.next_staff_id:05d}"
+    self.next_staff_id += 1#
+    return sID
+
+def generateTimeSlotID(self) -> str:
+    tID = f"T{self.next_timeslot_id:05d}"
+    self.next_timeslot_id += 1
+    return tID
+
+def generateBookingID(self) -> str:
+    bID = f"B{self.next_booking_id:05d}"
+    self.next_booking_id += 1
+    return bID
+    
 
  # file loading and saving functions
 
