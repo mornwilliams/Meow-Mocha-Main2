@@ -3,6 +3,35 @@ from datetime import date, datetime, time
 import csv
 import pickle
 import os
+import tkinter as tk
+
+#-- password hashing, date time conversions here (helper functions)
+
+def hashPassword(plain:str) -> str:
+    return plain [::-1]  #placeholder (not plain text)
+def verifyPassword(plain:str, hashed:str) -> bool:
+    return hashPassword(plain) == hashed
+
+#date time conversions here
+def parseDate(date_str: str) -> date:
+    return datetime.strptime(date_str, "%Y-%m-%d").date()
+
+def parseTime(time_str: str) -> time:
+    return datetime.strptime(time_str, "%H:%M").time()
+
+def formatDate(date_obj: date) -> str:
+    return date_obj.strftime("%Y-%m-%d")
+
+def formatTime(time_obj: time) -> str:
+    return time_obj.strftime("%H:%M")
+
+def parseTimeStamp(timestamp_str: str) -> datetime:
+    return datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+
+def formatTimeStamp(timestamp_obj: datetime) -> str:
+    return timestamp_obj.strftime("%Y-%m-%d %H:%M:%S")
+
+#--data classes
 
 @dataclass
 class Customer:
@@ -52,7 +81,19 @@ class Booking:
     #cancel method here
     #complete method here
 
- #--system functions (generating primary keys, creating lists)
+ #--system functions (generating primary keys, creating list
+class SystemFunctions:
+    pass
+
+def generateCustomerID():
+    pass
+def generateStaffID():
+    pass
+def generateTimeSlotID():
+    pass
+def generateBookingID():
+    pass
+
  # file loading and saving functions
 
 
