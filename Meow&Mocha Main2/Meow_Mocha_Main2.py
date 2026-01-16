@@ -43,8 +43,21 @@ class Customer:
     phone_number:str
     password_hash:str
 
-    def editCustomerDetails():
-        pass
+    def editFirstName(self, new_first_name: str) -> None:
+        self.first_name = new_first_name
+    def editSurname(self, new_surname: str) -> None:
+        self.surname = new_surname
+    def editDateOfBirth(self, new_dob: date) -> None:
+        self.date_of_birth = new_dob
+    def editEmail(self, new_email: str) -> None:
+        self.email = new_email
+    def editPhoneNumber(self, new_phone_number:str) -> None:
+        self.phone_number = new_phone_number
+
+    def setPassword(self, plain_password: str) -> None:
+        self.password_hash = hashPassword(plain_password)
+
+        
 
 @dataclass
 class Staff:
@@ -58,8 +71,20 @@ class Staff:
     higher_admin:bool
 
     #editing methods here
-    def editStaffDetails():
-        pass
+    def editFirstName(self, new_first_name: str) -> None:
+        self.first_name = new_first_name
+    def editSurname(self, new_surname: str) -> None:
+        self.surname = new_surname
+    def editDateOfBirth(self, new_dob: date) -> None:
+        self.date_of_birth = new_dob
+    def editEmail(self, new_email: str) -> None:
+        self.email = new_email
+    def editPhoneNumber(self, new_phone_number:str) -> None:
+        self.phone_number = new_phone_number
+
+        #set password method here
+    def setPassword(self, plain_password: str) -> None:
+        self.password_hash = hashPassword(plain_password)
 
 @dataclass
 class TimeSlot:
@@ -70,7 +95,7 @@ class TimeSlot:
     max_capacity: int
     is_available: bool=True
 
-    #duration method here
+    #duration method here, returns timedelta 
     def duration(self) -> timedelta:
         dt_start = datetime.combine(self.date, self.start_time)
         dt_end = datetime.combine(self.date, self.end_time)
@@ -88,10 +113,15 @@ class Booking:
 
     #cancel method here
     def cancelBooking(self):
-        pass
+        if self.status == "BOOKED":
+            self.status = "CANCELLED"
+
     #complete method here
     def completeBooking(self):
-        pass
+        if self.status == "BOOKED":
+            self.status = "COMPLETED"
+
+
 
  #---- system functions (generating primary keys, creating lists) ----
 
@@ -128,6 +158,71 @@ def generateBookingID(self) -> str:
     return bID
     
 
- # file loading and saving functions
+ #-----    file loading and saving functions here
+
+def loadData(self) -> None:
+    self._loadCustomers()
+    self._loadStaff()
+    self._loadTimeSlots()
+    self._loadBookings()
+    
+
+def saveData(self) -> None:
+    self._saveCustomers()  
+    self._saveStaff()
+    self._saveTimeSlots()
+    self._saveBookings()
+
+def _loadCustomers(self) -> None:
+    if os.path.exists("customers.pkl"):
+        with open("customers.pkl", "rb") as f:
+            self.customers = pickle.load(f)
+        #set next customer id
+        if self.customers:
+            max_id_num = max(int(c.customer_id[1:]) for c in self.customers)
+            self.next_customer_id = max_id_num + 1
+
+def _save_customers(self) -> None:
+    with open("customers.pkl", "wb") as f:
+        pickle.dump(self.customers, f)
+
+def _loadStaff(self) -> None:
+    if os.path.exists("staff.pkl"):
+        with open("staff.pkl", "rb") as f:
+            self.staff = pickle.load(f)
+        #set next staff id
+        if self.staff:
+            max_id_num = max(int(s.staff_id[1:]) for s in self.staff)
+            self.next_staff_id = max_id_num + 1
+
+def _saveStaff(self) -> None:
+    with open("staff.pkl", "wb") as f:
+        pickle.dump(self.staff, f)
+    
 
 
+ #-----    lookups and searches here 
+
+
+
+
+
+ #-----    Time slot and capacity management here -----
+
+
+
+
+ #-- GUI classes and functions here (login screen, main menu, etc.)
+
+
+ #---- MAIN Application loop here! --- temporary placeholder ----
+if __name__ == "__main__":
+    # Initialize system manager
+    system_manager = SystemManager()
+    system_manager.init()
+    # Placeholder for GUI initialization
+    root = tk.Tk()
+    root.title("Meow&Mocha Booking System")
+
+    # Placeholder for main application loop
+    root.mainloop() #wait for events 
