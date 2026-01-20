@@ -198,6 +198,79 @@ def _loadStaff(self) -> None:
 def _saveStaff(self) -> None:
     with open("staff.pkl", "wb") as f:
         pickle.dump(self.staff, f)
+
+def _load_timeslots(self) -> None:
+    self.timeslots = []
+    if not os.path.exists("timeslots.csv"):
+        return
+    with open("timeslots.csv", "r", newline='', encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            timeslot = TimeSlot(
+                timeslot_id=row["timeslot_id"],
+                date=parseDate(row["date"]),
+                start_time=parseTime(row["start_time"]),
+                end_time=parseTime(row["end_time"]),
+                max_capacity=int(row["max_capacity"]),
+                is_available=row["is_available"].lower() == "true"
+            )
+            self.timeslots.append(timeslot)
+        #set next timeslot id
+        if self.timeslots:
+            max_id_num = max(int(t.timeslot_id[1:]) for t in self.timeslots)
+            self.next_timeslot_id = max_id_num + 1
+
+def _saveTimeSlots(self) -> None:
+    with open("timeslots.csv", "w", newline='', encoding="utf-8") as f:
+        fieldnames = ["timeslot_id", "date", "start_time", "end_time", "max_capacity", "is_available"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for t in self.timeslots:
+            writer.writerow({
+                "timeslot_id": t.timeslot_id,
+                "date": formatDate(t.date),
+                "start_time": formatTime(t.start_time),
+                "end_time": formatTime(t.end_time),
+                "max_capacity": t.max_capacity,
+                "is_available": str(t.is_available),
+             })
+def _loadBookings(self) -> None:
+    self.bookings = []
+    if not os.path.exists("bookings.csv"):
+        return
+    with open("bookings.csv", "r", newline='', encoding="utf-8") as f:
+        csv.reader = csv.DictReader(f)
+        reader = csv.DictReader(f)
+        for row in reader:
+            booking = Booking(
+                booking_id=row["booking_id"],
+                customer_id=row["customer_id"],
+                timeslot_id=row["timeslot_id"],
+                number_of_guests=int(row["number_of_guests"]),
+                status=row["status"],
+                booking_timestamp=parseTimeStamp(row["booking_timestamp"])
+            )
+            self.bookings.append(booking)
+            #set next booking id    
+            if self.bookings:
+                max_id_num = max(int(b.booking_id[1:]) for b in self.bookings)
+                self.next_booking_id = max_id_num + 1
+
+def _saveBookings(self) -> None:
+    with open("bookings.csv", "w", newline='', encoding="utf-8") as f:
+        fieldnames = ["booking_id", "customer_id", "timeslot_id", "number_of_guests", "status", "booking_timestamp"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for b in self.bookings:
+            writer.writerow({
+                "booking_id": b.booking_id,
+                "customer_id": b.customer_id,
+                "timeslot_id": b.timeslot_id,
+                "number_of_guests": b.number_of_guests,
+                "status": b.status,
+                "booking_timestamp": formatTimeStamp(b.booking_timestamp),
+            })
+
     
 
 
