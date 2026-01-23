@@ -4,6 +4,7 @@ import csv
 import pickle
 import os
 import tkinter as tk
+from tkinter import messagebox
 
 #-- password hashing, date time conversions here (helper functions)
 
@@ -330,6 +331,16 @@ def cancelBooking(self, booking: Booking) -> None:
 
  #-- GUI classes and functions here (login screen, main menu, etc.)
 
+class MeowMochaApp:
+    def __init__(self, root: tk.Tk):
+        self.root = root
+        self.root.title = "Meow&Mocha Booking System"
+        self.system.load_from_files() #fix this!!!!!!!!!!!!
+        self.build_main_menu()#
+
+    def buildMainMenu(self):
+        pass #placeholder for main menu GUI building
+    
 
 
 
@@ -341,9 +352,6 @@ if __name__ == "__main__":
     # Initialize system manager
     system_manager = SystemManager()
     system_manager.init()
-    # Placeholder for GUI initialization
     root = tk.Tk()
-    root.title("Meow&Mocha Booking System") #change this later
-
-    # Placeholder for main application loop
+    app = MeowMochaApp(root)
     root.mainloop() #wait for events 
