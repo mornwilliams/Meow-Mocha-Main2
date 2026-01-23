@@ -5,11 +5,13 @@ import pickle
 import os
 import tkinter as tk
 from tkinter import messagebox
+from typing import Optional
 
 #-- password hashing, date time conversions here (helper functions)
 
 def hashPassword(plain:str) -> str:
-    return plain [::-1]  #placeholder (not plain text)
+    return plain[::-1]  #placeholder (not plain text)
+
 def verifyPassword(plain:str, hashed:str) -> bool:
     return hashPassword(plain) == hashed
 
@@ -58,8 +60,6 @@ class Customer:
     def setPassword(self, plain_password: str) -> None:
         self.password_hash = hashPassword(plain_password)
 
-        
-
 @dataclass
 class Staff:
     staff_id: str
@@ -83,7 +83,6 @@ class Staff:
     def editPhoneNumber(self, new_phone_number:str) -> None:
         self.phone_number = new_phone_number
 
-        #set password method here
     def setPassword(self, plain_password: str) -> None:
         self.password_hash = hashPassword(plain_password)
 
@@ -101,7 +100,6 @@ class TimeSlot:
         dt_start = datetime.combine(self.date, self.start_time)
         dt_end = datetime.combine(self.date, self.end_time)
         return dt_end - dt_start
-        
 
 @dataclass
 class Booking:  
@@ -122,323 +120,303 @@ class Booking:
         if self.status == "BOOKED":
             self.status = "COMPLETED"
 
-
-
- #---- system functions (generating primary keys, creating lists) ----
+#---- system manager with methods properly defined inside the class ----
 
 class SystemManager:
-    def init(self) -> None:
+    def __init__(self) -> None:
+        # data containers
         self.customers: list[Customer] = []
         self.staff: list[Staff] = []
         self.timeslots: list[TimeSlot] = []
         self.bookings: list[Booking] = []
 
+        # id counters
         self.next_customer_id: int = 1
         self.next_staff_id: int = 1
         self.next_timeslot_id: int = 1
         self.next_booking_id: int = 1
 
-def generateCustomerID(self) -> str:
-    cID = f"C{self.next_customer_id:05d}"
-    self.next_customer_id += 1
-    return cID
+    # ID generators
+    def generateCustomerID(self) -> str:
+        cID = f"C{self.next_customer_id:05d}"
+        self.next_customer_id += 1
+        return cID
 
-def generateStaffID(self) -> str:   
-    sID = f"S{self.next_staff_id:05d}"
-    self.next_staff_id += 1#
-    return sID
+    def generateStaffID(self) -> str:   
+        sID = f"S{self.next_staff_id:05d}"
+        self.next_staff_id += 1
+        return sID
 
-def generateTimeSlotID(self) -> str:
-    tID = f"T{self.next_timeslot_id:05d}"
-    self.next_timeslot_id += 1
-    return tID
+    def generateTimeSlotID(self) -> str:
+        tID = f"T{self.next_timeslot_id:05d}"
+        self.next_timeslot_id += 1
+        return tID
 
-def generateBookingID(self) -> str:
-    bID = f"B{self.next_booking_id:05d}"
-    self.next_booking_id += 1
-    return bID
-    
+    def generateBookingID(self) -> str:
+        bID = f"B{self.next_booking_id:05d}"
+        self.next_booking_id += 1
+        return bID
 
- #-----    file loading and saving functions here
+    # load / save API
+    def loadData(self) -> None:
+        self._load_customers()
+        self._load_staff()
+        self._load_timeslots()
+        self._load_bookings()
 
-def loadData(self) -> None:
-    self._loadCustomers()
-    self._loadStaff()
-    self._loadTimeSlots()
-    self._loadBookings()
-    
+    def saveData(self) -> None:
+        self._save_customers()  
+        self._save_staff()
+        self._save_timeslots()
+        self._save_bookings()
 
-def saveData(self) -> None:
-    self._saveCustomers()  
-    self._saveStaff()
-    self._saveTimeSlots()
-    self._saveBookings()
+    # internal IO implementations (consistent naming)
+    def _load_customers(self) -> None:
+        if os.path.exists("customers.pkl"):
+            with open("customers.pkl", "rb") as f:
+                self.customers = pickle.load(f)
+            # set next customer id
+            if self.customers:
+                max_id_num = max(int(c.customer_id[1:]) for c in self.customers)
+                self.next_customer_id = max_id_num + 1
+            self.customers.sort(key=lambda c: c.email)
 
-def _loadCustomers(self) -> None:
-    if os.path.exists("customers.pkl"):
-        with open("customers.pkl", "rb") as f:
-            self.customers = pickle.load(f)
-        #set next customer id
-        if self.customers:
-            max_id_num = max(int(c.customer_id[1:]) for c in self.customers)
-            self.next_customer_id = max_id_num + 1
+    def _save_customers(self) -> None:
+        with open("customers.pkl", "wb") as f:
+            pickle.dump(self.customers, f)
 
-def _save_customers(self) -> None:
-    with open("customers.pkl", "wb") as f:
-        pickle.dump(self.customers, f)
+    def _load_staff(self) -> None:
+        if os.path.exists("staff.pkl"):
+            with open("staff.pkl", "rb") as f:
+                self.staff = pickle.load(f)
+            # set next staff id
+            if self.staff:
+                max_id_num = max(int(s.staff_id[1:]) for s in self.staff)
+                self.next_staff_id = max_id_num + 1
+            self.staff.sort(key=lambda s: s.email)
 
-def _loadStaff(self) -> None:
-    if os.path.exists("staff.pkl"):
-        with open("staff.pkl", "rb") as f:
-            self.staff = pickle.load(f)
-        #set next staff id
-        if self.staff:
-            max_id_num = max(int(s.staff_id[1:]) for s in self.staff)
-            self.next_staff_id = max_id_num + 1
+    def _save_staff(self) -> None:
+        with open("staff.pkl", "wb") as f:
+            pickle.dump(self.staff, f)
 
-def _saveStaff(self) -> None:
-    with open("staff.pkl", "wb") as f:
-        pickle.dump(self.staff, f)
+    def _load_timeslots(self) -> None:
+        self.timeslots = []
+        if not os.path.exists("timeslots.csv"):
+            return
+        with open("timeslots.csv", "r", newline='', encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                timeslot = TimeSlot(
+                    timeslot_id=row["timeslot_id"],
+                    date=parseDate(row["date"]),
+                    start_time=parseTime(row["start_time"]),
+                    end_time=parseTime(row["end_time"]),
+                    max_capacity=int(row["max_capacity"]),
+                    is_available=row.get("is_available", "True").lower() == "true"
+                )
+                self.timeslots.append(timeslot)
+            # set next timeslot id
+            if self.timeslots:
+                max_id_num = max(int(t.timeslot_id[1:]) for t in self.timeslots)
+                self.next_timeslot_id = max_id_num + 1
 
-def _load_timeslots(self) -> None:
-    self.timeslots = []
-    if not os.path.exists("timeslots.csv"):
-        return
-    with open("timeslots.csv", "r", newline='', encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            timeslot = TimeSlot(
-                timeslot_id=row["timeslot_id"],
-                date=parseDate(row["date"]),
-                start_time=parseTime(row["start_time"]),
-                end_time=parseTime(row["end_time"]),
-                max_capacity=int(row["max_capacity"]),
-                is_available=row["is_available"].lower() == "true"
-            )
-            self.timeslots.append(timeslot)
-        #set next timeslot id
-        if self.timeslots:
-            max_id_num = max(int(t.timeslot_id[1:]) for t in self.timeslots)
-            self.next_timeslot_id = max_id_num + 1
+    def _save_timeslots(self) -> None:
+        with open("timeslots.csv", "w", newline='', encoding="utf-8") as f:
+            fieldnames = ["timeslot_id", "date", "start_time", "end_time", "max_capacity", "is_available"]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for t in self.timeslots:
+                writer.writerow({
+                    "timeslot_id": t.timeslot_id,
+                    "date": formatDate(t.date),
+                    "start_time": formatTime(t.start_time),
+                    "end_time": formatTime(t.end_time),
+                    "max_capacity": t.max_capacity,
+                    "is_available": str(t.is_available),
+                })
 
-def _saveTimeSlots(self) -> None:
-    with open("timeslots.csv", "w", newline='', encoding="utf-8") as f:
-        fieldnames = ["timeslot_id", "date", "start_time", "end_time", "max_capacity", "is_available"]
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for t in self.timeslots:
-            writer.writerow({
-                "timeslot_id": t.timeslot_id,
-                "date": formatDate(t.date),
-                "start_time": formatTime(t.start_time),
-                "end_time": formatTime(t.end_time),
-                "max_capacity": t.max_capacity,
-                "is_available": str(t.is_available),
-             })
-def _loadBookings(self) -> None:
-    self.bookings = []
-    if not os.path.exists("bookings.csv"):
-        return
-    with open("bookings.csv", "r", newline='', encoding="utf-8") as f:
-        csv.reader = csv.DictReader(f)
-        reader = csv.DictReader(f)
-        for row in reader:
-            booking = Booking(
-                booking_id=row["booking_id"],
-                customer_id=row["customer_id"],
-                timeslot_id=row["timeslot_id"],
-                number_of_guests=int(row["number_of_guests"]),
-                status=row["status"],
-                booking_timestamp=parseTimeStamp(row["booking_timestamp"])
-            )
-            self.bookings.append(booking)
-            #set next booking id    
+    def _load_bookings(self) -> None:
+        self.bookings = []
+        if not os.path.exists("bookings.csv"):
+            return
+        with open("bookings.csv", "r", newline='', encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                booking = Booking(
+                    booking_id=row["booking_id"],
+                    customer_id=row["customer_id"],
+                    timeslot_id=row["timeslot_id"],
+                    number_of_guests=int(row["number_of_guests"]),
+                    status=row["status"],
+                    booking_timestamp=parseTimeStamp(row["booking_timestamp"])
+                )
+                self.bookings.append(booking)
+            # set next booking id    
             if self.bookings:
                 max_id_num = max(int(b.booking_id[1:]) for b in self.bookings)
                 self.next_booking_id = max_id_num + 1
 
-def _saveBookings(self) -> None:
-    with open("bookings.csv", "w", newline='', encoding="utf-8") as f:
-        fieldnames = ["booking_id", "customer_id", "timeslot_id", "number_of_guests", "status", "booking_timestamp"]
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for b in self.bookings:
-            writer.writerow({
-                "booking_id": b.booking_id,
-                "customer_id": b.customer_id,
-                "timeslot_id": b.timeslot_id,
-                "number_of_guests": b.number_of_guests,
-                "status": b.status,
-                "booking_timestamp": formatTimeStamp(b.booking_timestamp),
-            })
+    def _save_bookings(self) -> None:
+        with open("bookings.csv", "w", newline='', encoding="utf-8") as f:
+            fieldnames = ["booking_id", "customer_id", "timeslot_id", "number_of_guests", "status", "booking_timestamp"]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for b in self.bookings:
+                writer.writerow({
+                    "booking_id": b.booking_id,
+                    "customer_id": b.customer_id,
+                    "timeslot_id": b.timeslot_id,
+                    "number_of_guests": b.number_of_guests,
+                    "status": b.status,
+                    "booking_timestamp": formatTimeStamp(b.booking_timestamp),
+                })
 
-    
+    # lookups and searches (binary search expects sorted lists)
+    def findCustomerByEmail(self, email: str) -> Optional[Customer]:
+        target = email.lower()
+        left = 0
+        right = len(self.customers) - 1
 
+        while left <= right:
+            mid = (left + right) // 2
+            mid_email = self.customers[mid].email.lower()
 
- #-----    lookups and searches here - remeber to sort customers before implementing binary search -----
+            if mid_email == target:
+                return self.customers[mid]
+            elif mid_email < target:
+                left = mid + 1
+            else:
+                right = mid - 1
 
-def findCustomerByEmail(self, email: str) -> Customer | None:
-    target = email.lower()
-    left = 0
-    right = len(self.customers) - 1
+        return None
 
-    while left <= right:
-        mid = (left + right) // 2
-        mid_email = self.customers[mid].email.lower()
+    def findStaffByEmail(self, email: str) -> Optional[Staff]:
+        target = email.lower()
+        left = 0
+        right = len(self.staff) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            mid_email = self.staff[mid].email.lower()
+            if mid_email == target:
+                return self.staff[mid]
+            elif mid_email < target:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return None
 
-        if mid_email == target:
-            return self.customers[mid]
-        elif mid_email < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-
-    return None
-
-def findStaffByEmail(self, email: str) -> Staff | None:
-    target = email.lower()
-    left = 0
-    right = len(self.staff) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        mid_email = self.staff[mid].email.lower()
-        if mid_email == target:
-            return self.staff[mid]
-        elif mid_email < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-
-
-
-
-
- #---- registering and logging in users here ----
-
-def registerCustomer(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str) -> Customer:
-    
-    # -- check if email already exists first, write search method first
-    
-    customer_id = self.generateCustomerID()
-    password_hash = hashPassword(plain_password)
-    new_customer = Customer(
-        customer_id=customer_id,
-        first_name=first_name,
-        surname=surname,
-        date_of_birth=date_of_birth,
-        email=email,
-        phone_number=phone_number,
-        password_hash=password_hash
-    )
-    self.customers.append(new_customer)
-    self.customers.sort(key=lambda c: c.email)  #keep sorted by email so that binary search works
-    return new_customer
-
-
-
-
-def loginCustomer(self, email: str, plain_password: str) -> Customer | None:
-    pass
-
-
-def registerStaff(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str, higher_admin: bool) -> Staff:
-    staff_id = self.generateStaffID()
-    password_hash = hashPassword(plain_password)
-    new_staff = Staff(
-        staff_id=staff_id,
-        first_name=first_name,
-        surname=surname,
-        date_of_birth=date_of_birth,
-        email=email,
-        phone_number=phone_number,
-        password_hash=password_hash,
-        higher_admin=higher_admin
+    # registering and logging in users here
+    def registerCustomer(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str) -> Customer:
+        customer_id = self.generateCustomerID()
+        password_hash = hashPassword(plain_password)
+        new_customer = Customer(
+            customer_id=customer_id,
+            first_name=first_name,
+            surname=surname,
+            date_of_birth=date_of_birth,
+            email=email,
+            phone_number=phone_number,
+            password_hash=password_hash
         )
-    self.staff.append(new_staff)
-    self.staff.sort(key=lambda s: s.email)  #keep sorted by email
-    return new_staff
+        self.customers.append(new_customer)
+        self.customers.sort(key=lambda c: c.email)  # keep sorted by email so that binary search works
+        return new_customer
 
+    def loginCustomer(self, email: str, plain_password: str) -> Optional[Customer]:
+        found = self.findCustomerByEmail(email)
+        if found and verifyPassword(plain_password, found.password_hash):
+            return found
+        return None
 
-def loginStaff(self, email: str, plain_password: str) -> Staff | None:
-    pass
+    def registerStaff(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str, higher_admin: bool) -> Staff:
+        staff_id = self.generateStaffID()
+        password_hash = hashPassword(plain_password)
+        new_staff = Staff(
+            staff_id=staff_id,
+            first_name=first_name,
+            surname=surname,
+            date_of_birth=date_of_birth,
+            email=email,
+            phone_number=phone_number,
+            password_hash=password_hash,
+            higher_admin=higher_admin
+        )
+        self.staff.append(new_staff)
+        self.staff.sort(key=lambda s: s.email)  # keep sorted by email for the binary search 
+        return new_staff
 
+    def loginStaff(self, email: str, plain_password: str) -> Optional[Staff]:
+        found = self.findStaffByEmail(email)
+        if found and verifyPassword(plain_password, found.password_hash):
+            return found
+        return None
 
+    # Time slot and capacity management
+    def currentGuestsInTimeslot(self, timeslot_id: str) -> int:
+        total_guests = 0
+        for booking in self.bookings:
+            if booking.timeslot_id == timeslot_id and booking.status == "BOOKED":
+                total_guests += booking.number_of_guests
+        return total_guests
 
- #-----    Time slot and capacity management here -----
+    def isTimeSlotFull(self, ts: TimeSlot) -> bool:
+        return self.currentGuestsInTimeslot(ts.timeslot_id) >= ts.max_capacity
 
-def currentGuestsInTimeslot(self, timeslot_id: str) -> int:
-    total_guests = 0
-    for booking in self.bookings:
-        if booking.timeslot_id == timeslot_id and booking.status == "BOOKED":
-            total_guests += booking.number_of_guests
-    return total_guests
+    def recalculateTimeSlotAvailability(self, ts: TimeSlot) -> None:
+        ts.is_available = not self.isTimeSlotFull(ts)
 
-def isTimeSlotFull(self, ts: TimeSlot) -> bool:
-    return self.currentGuestsInTimeslot(ts.timeslot_id) >= ts.max_capacity
+    # Booking management
+    def createBooking(self, customer: Customer, timeslot: TimeSlot, number_of_guests: int) -> Booking:
+        if not timeslot.is_available:
+            raise ValueError("Time slot is not available")
+        if self.currentGuestsInTimeslot(timeslot.timeslot_id) + number_of_guests > timeslot.max_capacity:
+            raise ValueError("Not enough capacity in the selected time slot")
 
-def recalculateTimeSlotAvailability(self, ts: TimeSlot) -> None:
-    ts.is_available = not self.isTimeSlotFull(ts)
+        current = self.currentGuestsInTimeslot(timeslot.timeslot_id)
+        if current + number_of_guests >= timeslot.max_capacity:
+            raise ValueError("Booking would exceed time slot capacity")
 
- #-----   Booking management here -----
-
-# Creating a booking/ canceling booking 
-
-def createBooking(self, customer: Customer, timeslot: TimeSlot, number_of_guests: int) -> Booking:
-    if not timeslot.is_available:
-        raise ValueError("Time slot is not available")
-    if self.currentGuestsInTimeslot(timeslot.timeslot_id) + number_of_guests > timeslot.max_capacity:
-        raise ValueError("Not enough capacity in the selected time slot")
-
-    current = self.currentGuestsInTimeslot(timeslot.timeslot_id)
-    if current + number_of_guests >= timeslot.max_capacity:
-        raise ValueError("Booking would exceed time slot capacity")
-
-    booking_id = self.generateBookingID()
-    new_booking = Booking(
-        booking_id=booking_id,
-        customer_id=customer.customer_id,
-        timeslot_id=timeslot.timeslot_id,
-        number_of_guests=number_of_guests,
-        status="BOOKED"
-    )
-    self.bookings.append(new_booking)
-    self.recalculateTimeSlotAvailability(timeslot)
-    return new_booking
-
-def cancelBooking(self, booking: Booking) -> None:
-    booking.cancelBooking()
-    #update timeslot availability
-    timeslot = next((ts for ts in self.timeslots if ts.timeslot_id == booking.timeslot_id), None)
-    if timeslot:
+        booking_id = self.generateBookingID()
+        new_booking = Booking(
+            booking_id=booking_id,
+            customer_id=customer.customer_id,
+            timeslot_id=timeslot.timeslot_id,
+            number_of_guests=number_of_guests,
+            status="BOOKED"
+        )
+        self.bookings.append(new_booking)
         self.recalculateTimeSlotAvailability(timeslot)
+        return new_booking
 
- #-- GUI classes and functions here (login screen, main menu, etc.)
+    def cancelBooking(self, booking: Booking) -> None:
+        booking.cancelBooking()
+        # update timeslot availability
+        timeslot = next((ts for ts in self.timeslots if ts.timeslot_id == booking.timeslot_id), None)
+        if timeslot:
+            self.recalculateTimeSlotAvailability(timeslot)
+
+# -- GUI classes and functions here (login screen, main menu, etc.)
 
 class MeowMochaApp:
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root: tk.Tk, system: SystemManager):
         self.root = root
-        self.root.title = "Meow&Mocha Booking System"
-        self.system.load_from_files() #fix this!!!!!!!!!!!!
-        self.build_main_menu()#
+        self.system = system
+        self.root.title("Meow&Mocha Booking System")
+        # load data from the system manager (method exists on SystemManager)
+        self.system.loadData()
+        self.build_main_menu()
 
-    def buildMainMenu(self):
+    def build_main_menu(self):
         frame = tk.Frame(self.root)
         frame.pack(padx=20, pady=20)
 
         tk.Label(frame, text="Welcome to Meow&Mocha", font=("Arial", 16)).pack(pady=10)
 
-        
-
-
-
-
-
-
- #---- MAIN Application loop here! --- temporary placeholder ----
+#---- MAIN Application loop here! --- temporary placeholder ----
 if __name__ == "__main__":
     # Initialize system manager
     system_manager = SystemManager()
-    system_manager.init()
+    # no separate init() required now because __init__ performs setup
     root = tk.Tk()
-    app = MeowMochaApp(root)
+    app = MeowMochaApp(root, system_manager)
     root.mainloop() #wait for events 
