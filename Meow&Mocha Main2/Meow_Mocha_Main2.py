@@ -277,7 +277,90 @@ def _saveBookings(self) -> None:
 
  #-----    lookups and searches here - remeber to sort customers before implementing binary search -----
 
+def findCustomerByEmail(self, email: str) -> Customer | None:
+    target = email.lower()
+    left = 0
+    right = len(self.customers) - 1
 
+    while left <= right:
+        mid = (left + right) // 2
+        mid_email = self.customers[mid].email.lower()
+
+        if mid_email == target:
+            return self.customers[mid]
+        elif mid_email < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return None
+
+def findStaffByEmail(self, email: str) -> Staff | None:
+    target = email.lower()
+    left = 0
+    right = len(self.staff) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        mid_email = self.staff[mid].email.lower()
+        if mid_email == target:
+            return self.staff[mid]
+        elif mid_email < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+
+
+
+
+ #---- registering and logging in users here ----
+
+def registerCustomer(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str) -> Customer:
+    
+    # -- check if email already exists first, write search method first
+    
+    customer_id = self.generateCustomerID()
+    password_hash = hashPassword(plain_password)
+    new_customer = Customer(
+        customer_id=customer_id,
+        first_name=first_name,
+        surname=surname,
+        date_of_birth=date_of_birth,
+        email=email,
+        phone_number=phone_number,
+        password_hash=password_hash
+    )
+    self.customers.append(new_customer)
+    self.customers.sort(key=lambda c: c.email)  #keep sorted by email so that binary search works
+    return new_customer
+
+
+
+
+def loginCustomer(self, email: str, plain_password: str) -> Customer | None:
+    pass
+
+
+def registerStaff(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str, higher_admin: bool) -> Staff:
+    staff_id = self.generateStaffID()
+    password_hash = hashPassword(plain_password)
+    new_staff = Staff(
+        staff_id=staff_id,
+        first_name=first_name,
+        surname=surname,
+        date_of_birth=date_of_birth,
+        email=email,
+        phone_number=phone_number,
+        password_hash=password_hash,
+        higher_admin=higher_admin
+        )
+    self.staff.append(new_staff)
+    self.staff.sort(key=lambda s: s.email)  #keep sorted by email
+    return new_staff
+
+
+def loginStaff(self, email: str, plain_password: str) -> Staff | None:
+    pass
 
 
 
@@ -339,8 +422,12 @@ class MeowMochaApp:
         self.build_main_menu()#
 
     def buildMainMenu(self):
-        pass #placeholder for main menu GUI building
-    
+        frame = tk.Frame(self.root)
+        frame.pack(padx=20, pady=20)
+
+        tk.Label(frame, text="Welcome to Meow&Mocha", font=("Arial", 16)).pack(pady=10)
+
+        
 
 
 
