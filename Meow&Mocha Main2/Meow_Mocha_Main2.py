@@ -274,7 +274,7 @@ def _saveBookings(self) -> None:
     
 
 
- #-----    lookups and searches here 
+ #-----    lookups and searches here - remeber to sort customers before implementing binary search -----
 
 
 
@@ -282,10 +282,54 @@ def _saveBookings(self) -> None:
 
  #-----    Time slot and capacity management here -----
 
+def currentGuestsInTimeslot(self, timeslot_id: str) -> int:
+    total_guests = 0
+    for booking in self.bookings:
+        if booking.timeslot_id == timeslot_id and booking.status == "BOOKED":
+            total_guests += booking.number_of_guests
+    return total_guests
 
+def isTimeSlotFull(self, ts: TimeSlot) -> bool:
+    return self.currentGuestsInTimeslot(ts.timeslot_id) >= ts.max_capacity
 
+def recalculateTimeSlotAvailability(self, ts: TimeSlot) -> None:
+    ts.is_available = not self.isTimeSlotFull(ts)
+
+ #-----   Booking management here -----
+
+# Creating a booking/ canceling booking 
+
+def createBooking(self, customer: Customer, timeslot: TimeSlot, number_of_guests: int) -> Booking:
+    if not timeslot.is_available:
+        raise ValueError("Time slot is not available")
+    if self.currentGuestsInTimeslot(timeslot.timeslot_id) + number_of_guests > timeslot.max_capacity:
+        raise ValueError("Not enough capacity in the selected time slot")
+
+    current = self.currentGuestsInTimeslot(timeslot.timeslot_id)
+    if current + number_of_guests >= timeslot.max_capacity:
+        raise ValueError("Booking would exceed time slot capacity")
+
+    booking_id = self.generateBookingID()
+    new_booking = Booking(
+        booking_id=booking_id,
+        customer_id=customer.customer_id,
+        timeslot_id=timeslot.timeslot_id,
+        number_of_guests=number_of_guests,
+        status="BOOKED"
+    )
+    self.bookings.append(new_booking)
+    self.recalculateTimeSlotAvailability(timeslot)
+    return new_booking
+
+def cancelBooking(self, booking: Booking) -> None:
+    booking.cancelBooking()
+    #update timeslot availability
+    timeslot = next((ts for ts in self.timeslots if ts.timeslot_id == booking.timeslot_id), None)
+    if timeslot:
+        self.recalculateTimeSlotAvailability(timeslot)
 
  #-- GUI classes and functions here (login screen, main menu, etc.)
+
 
 
  #---- MAIN Application loop here! --- temporary placeholder ----
