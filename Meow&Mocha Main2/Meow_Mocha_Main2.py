@@ -332,6 +332,10 @@ def cancelBooking(self, booking: Booking) -> None:
 
 
 
+
+
+
+
  #---- MAIN Application loop here! --- temporary placeholder ----
 if __name__ == "__main__":
     # Initialize system manager
@@ -339,7 +343,7 @@ if __name__ == "__main__":
     system_manager.init()
     # Placeholder for GUI initialization
     root = tk.Tk()
-    root.title("Meow&Mocha Booking System")
+    root.title("Meow&Mocha Booking System") #change this later
 
     # Placeholder for main application loop
     root.mainloop() #wait for events 
