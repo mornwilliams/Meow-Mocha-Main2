@@ -410,9 +410,20 @@ class MeowMochaApp:
         frame = tk.Frame(self.root)
         frame.pack(padx=20, pady=20)
 
-        tk.Label(frame, text="Welcome to Meow&Mocha", font=("Arial", 16)).pack(pady=10)
+        tk.Label(frame, text="Welcome to Meow&Mocha", font=("Helvetica Bold", 18)).pack(pady=10)
+        root.geometry("800x600")
+        
+
+
+
+
+
+
+
+
 
 #---- MAIN Application loop here! --- temporary placeholder ----
+
 if __name__ == "__main__":
     # Initialize system manager
     system_manager = SystemManager()
