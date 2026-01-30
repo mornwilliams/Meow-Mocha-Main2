@@ -4,7 +4,7 @@ import csv
 import pickle
 import os
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, Image, PhotoImage
 from typing import Optional
 
 #-- password hashing, date time conversions here (helper functions)
@@ -401,17 +401,42 @@ class MeowMochaApp:
     def __init__(self, root: tk.Tk, system: SystemManager):
         self.root = root
         self.system = system
-        self.root.title("Meow&Mocha Booking System")
+        self.root.configure(bg = "#ffc4df"  ) #plum color"
+ 
+        self.root.title("Meow&Mocha System")
+        self.logo_image = tk.PhotoImage(file="MM3.png")
         # load data from the system manager (method exists on SystemManager)
         self.system.loadData()
         self.build_main_menu()
 
     def build_main_menu(self):
         frame = tk.Frame(self.root)
+        frame.configure(bg = "#FFFFFF") #white background
         frame.pack(padx=20, pady=20)
 
-        tk.Label(frame, text="Welcome to Meow&Mocha", font=("Helvetica Bold", 18)).pack(pady=10)
-        root.geometry("800x600")
+        #logo label 
+        logo_label = tk.Label(frame, image=self.logo_image, bg = "#ffc4df" )
+        logo_label.pack(pady=10)
+        
+        tk.Label(
+            frame,
+            text = "Welcome to Meow&Mocha!",
+            font = ("Helvetica", 16, "bold"),
+            bg = "#ffffff",
+        ).pack(pady=10)
+
+        tk.Button(
+            frame,
+            text="Customer Portal",
+            width=20,
+         #commamnd goes here
+        ).pack(pady=5)
+        tk.Button(
+            frame,
+            text="Staff Portal",
+            width=20,
+            
+        ).pack(pady=5)
         
 
 
@@ -429,5 +454,6 @@ if __name__ == "__main__":
     system_manager = SystemManager()
     # no separate init() required now because __init__ performs setup
     root = tk.Tk()
+
     app = MeowMochaApp(root, system_manager)
     root.mainloop() #wait for events 
