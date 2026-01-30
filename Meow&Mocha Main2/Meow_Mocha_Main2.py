@@ -401,7 +401,7 @@ class MeowMochaApp:
     def __init__(self, root: tk.Tk, system: SystemManager):
         self.root = root
         self.system = system
-        self.root.configure(bg = "#ffc4df"  ) #plum color"
+        self.root.configure(bg = "#ffc4df"  ) #pink background 
  
         self.root.title("Meow&Mocha System")
         self.logo_image = tk.PhotoImage(file="MM3.png")
@@ -415,7 +415,7 @@ class MeowMochaApp:
         frame.pack(padx=20, pady=20)
 
         #logo label 
-        logo_label = tk.Label(frame, image=self.logo_image, bg = "#ffc4df" )
+        logo_label = tk.Label(frame, image=self.logo_image, bg = "#ffffff" )
         logo_label.pack(pady=10)
         
         tk.Label(
@@ -428,15 +428,32 @@ class MeowMochaApp:
         tk.Button(
             frame,
             text="Customer Portal",
+            font = ("Helvetica", 12),
             width=20,
          #commamnd goes here
         ).pack(pady=5)
         tk.Button(
             frame,
             text="Staff Portal",
+            font = ("Helvetica", 12),
+            width=20,
+            
+        ).pack(pady=5)#
+        tk.Button(
+            frame,
+            text="Admin Portal",
+            font = ("Helvetica", 12),
             width=20,
             
         ).pack(pady=5)
+
+    def buildCustomerPortal(self):
+        pass
+
+    def buildStaffPortal(self):
+        pass
+
+
         
 
 
