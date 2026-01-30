@@ -305,7 +305,7 @@ class SystemManager:
                 right = mid - 1
         return None
 
-    # registering and logging in users here
+    # registering and logging in users here -come back to this to add validation checks 
     def registerCustomer(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str) -> Customer:
         customer_id = self.generateCustomerID()
         password_hash = hashPassword(plain_password)
@@ -447,11 +447,49 @@ class MeowMochaApp:
             
         ).pack(pady=5)
 
-    def buildCustomerPortal(self):
+    #Customer Portals fpr LOG IN and SIGN UP here
+
+    def buildCustomerLogInPortal(self): #Might change this - may add these as functions inside building main menu, destrpy label to switch page 
+        pass
+    def buildCustomerSignUpPortal(self):
         pass
 
-    def buildStaffPortal(self):
+    #Staff Portals for LOG IN here
+
+    def buildStaffLogInPortal(self):
         pass
+
+    #Customer Hub here
+
+    def buildCustomerHub(self, customer: Customer):
+        pass
+
+    #Staff Hub here
+
+    def buildStaffHub(self, staff: Staff):
+        pass
+    def customerBookingPage(self):
+        pass
+    def staffAdminBookingPage(self): # <-- booking page will be the same for staff and higher admins
+        pass   
+
+    def customerViewBookingPage(self, customer: Customer):
+        pass
+    def staffViewCustomersPage(self, staff: Staff):
+        pass
+    def staffViewAllBookingsPage(self, staff: Staff):
+        pass
+    def manageAccountPage(self, user):
+        pass
+    def adminHub(self, admin: Staff):
+        pass
+    def createStaffAccount(self, admin: Staff):
+        pass
+    def viewAllAccounts(self, admin: Staff):
+        pass
+    def manageTimeSlots(self, admin: Staff): #managing time slots, toggling avaiability
+        pass
+
 
 
         
@@ -474,3 +512,11 @@ if __name__ == "__main__":
 
     app = MeowMochaApp(root, system_manager)
     root.mainloop() #wait for events 
+
+
+
+
+    # ---TO DO LIST---
+        # Add validation when registering customer and staff, refer to my pseudocode notes in design 
+        # Complete all GUI pages and link them together
+        # Create time slot management screen design for the documentation 
