@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+﻿from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 import csv
 import pickle
@@ -402,18 +402,31 @@ class MeowMochaApp:
         self.root = root
         self.system = system
         self.root.configure(bg = "#ffc4df"  ) #pink background 
- 
         self.root.title("Meow&Mocha System")
+        self.root.minsize(800, 500)  
+
         self.logo_image = tk.PhotoImage(file="MM3.png")
         # load data from the system manager (method exists on SystemManager)
         self.system.loadData()
-        self.build_main_menu()
+        self.current_frame = None
+        self.showMainMenu()
 
-    def build_main_menu(self):
-        frame = tk.Frame(self.root)
-        frame.configure(bg = "#FFFFFF") #white background
-        frame.pack(padx=20, pady=20)
+    def show_frame (self, builder_function, *args):
+        if self.current_frame is not None:
+            self.current_frame.destroy()
+        
+        frame = tk.Frame(self.root, bg ="#FFFFFF")
+        frame.pack(padx=20, pady=20,fill="both", expand=True )
+        self.current_frame = frame
 
+        builder_function(frame, *args) #Call a "builder function" to populate the frame
+   
+       
+    def showMainMenu(self):
+        self.show_frame(self.build_main_menu)
+
+
+    def build_main_menu(self, frame: tk.Frame):
         #logo label 
         logo_label = tk.Label(frame, image=self.logo_image, bg = "#ffffff" )
         logo_label.pack(pady=10)
@@ -430,13 +443,14 @@ class MeowMochaApp:
             text="Customer Portal",
             font = ("Helvetica", 12),
             width=20,
-         #commamnd goes here
+            command = self.showCustomerLogIn
         ).pack(pady=5)
         tk.Button(
             frame,
             text="Staff Portal",
             font = ("Helvetica", 12),
             width=20,
+            #command will go here (show_staff_login)
             
         ).pack(pady=5)#
         tk.Button(
@@ -444,12 +458,66 @@ class MeowMochaApp:
             text="Admin Portal",
             font = ("Helvetica", 12),
             width=20,
+            #command will go here (show_admin_login)
             
         ).pack(pady=5)
 
-    #Customer Portals fpr LOG IN and SIGN UP here
+    # ──────  Customer Portals fpr LOG IN and SIGN UP here ───────────
 
-    def buildCustomerLogInPortal(self): #Might change this - may add these as functions inside building main menu, destrpy label to switch page 
+    def showCustomerLogIn(self):
+        self.show_frame(self.buildCustomerLogInPortal)
+
+    def buildCustomerLogInPortal(self, frame: tk.Frame): #Might change this - may add these as functions inside building main menu, destrpy label to switch page 
+        tk.Label(
+            frame,
+            text="Customer Login",
+            font=("Helvetica", 16, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+        tk.Label(frame,font = ("Helvetica", 12, "bold"), text="Email:", bg="#ffffff").pack()
+        email_entry = tk.Entry(frame, width=30)
+        email_entry.pack(pady=5)
+
+        tk.Label(frame,font = ("Helvetica", 12, "bold"), text="Password:", bg="#ffffff").pack()
+        password_entry = tk.Entry(frame, show="*", width=30)
+        password_entry.pack(pady=5)
+
+        tk.Button(
+            frame,
+            text="Log in",
+            command=lambda: self.handle_customer_login(email_entry.get(),
+                                                       password_entry.get()),
+        ).pack(pady=10)
+
+        tk.Label(
+            frame,
+            text="Not a Customer yet?",
+            font=("Helvetica", 10, "bold"),
+            bg="#ffffff",
+        ).pack(pady=5)
+
+        tk.Button(
+            frame,
+            text="Sign up",
+            command= self.showCustomerSignUp
+        ).pack(pady=10)
+
+
+        tk.Button(
+            frame,
+            text="Back",
+            command=self.showMainMenu,
+            font = ("Helvetica", 12),
+        ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
+
+    def handle_customer_login(self, email: str, password: str):
+        # later: call your SystemManager login here, then
+        # self._show_frame(self.buildCustomerHub, customer)
+        pass
+
+
+    def showCustomerSignUp(self):
         pass
     def buildCustomerSignUpPortal(self):
         pass
@@ -520,3 +588,9 @@ if __name__ == "__main__":
         # Add validation when registering customer and staff, refer to my pseudocode notes in design 
         # Complete all GUI pages and link them together
         # Create time slot management screen design for the documentation 
+        # Add a calendar widget for selecting dates in the booking screen
+        # On application exit, save data
+        # Organise time slots so that you can select either 30 minute sessions or 1 hour sessions
+
+
+
