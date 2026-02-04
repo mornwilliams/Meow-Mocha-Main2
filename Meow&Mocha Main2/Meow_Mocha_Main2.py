@@ -518,9 +518,30 @@ class MeowMochaApp:
 
 
     def showCustomerSignUp(self):
-        pass
-    def buildCustomerSignUpPortal(self):
-        pass
+        self.show_frame(self.buildCustomerSignUpPortal)
+
+    def buildCustomerSignUpPortal(self, frame: tk.Frame):
+        tk.Label(
+            frame,
+            text="Customer Sign up",
+            font=("Helvetica", 16, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+        # Entries for first name, surname, dob, email, phone number, password
+        tk.label(
+            frame,
+            text="First Name:",
+            font=("Helvetica", 12, "bold"),
+            bg="#ffffff",
+        ).pack()
+
+        tk.Button(
+            frame,
+            text="Back",
+            command=self.showCustomerLogIn,
+            font = ("Helvetica", 12),
+        ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
 
     #Staff Portals for LOG IN here
 
