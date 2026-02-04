@@ -450,6 +450,7 @@ class MeowMochaApp:
             text="Staff Portal",
             font = ("Helvetica", 12),
             width=20,
+            command= self.showStaffLogIn
             #command will go here (show_staff_login)
             
         ).pack(pady=5)#
@@ -627,8 +628,41 @@ class MeowMochaApp:
 
     #Staff Portals for LOG IN here
 
-    def buildStaffLogInPortal(self):
-        pass
+    def showStaffLogIn(self):
+        self.show_frame(self.buildStaffLogInPortal)
+
+    def buildStaffLogInPortal(self, frame: tk.Frame):
+        tk.Label(
+            frame,
+            text="Staff Log in",
+            font=("Helvetica", 16, "bold"),
+            bg="#ffffff",
+        ).pack(pady=35)
+
+        form = tk.Frame(frame, bg="#ffffff")
+        form.pack(pady=10)  #A sub frame so a grid can be used for the form entries
+
+        tk.Label(form,font = ("Helvetica", 12), text="Email:", bg="#ffffff").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        email_entry = tk.Entry(form, width=30)
+        email_entry.grid(row=0, column=1, padx=5, pady=5,)
+
+        tk.Label(form,font = ("Helvetica", 12), text="Password:", bg="#ffffff").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        password_entry = tk.Entry(form, show="*", width=30)
+        password_entry.grid(row=1, column=1, padx=5, pady=5,)
+
+        tk.Button(
+            frame,
+            text="Log in",
+            command=lambda: self.handle_staff_login(email_entry.get(),
+                                                       password_entry.get()),
+        ).pack(pady=10)
+
+        tk.Button(
+            frame,
+            text="Back",
+            command=self.showMainMenu,
+            font = ("Helvetica", 12),
+        ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
 
     def handleCustomerSignUp(self):
         pass
@@ -638,12 +672,12 @@ class MeowMochaApp:
         # self._show_frame(self.buildStaffHub, staff)
         pass
 
-    #Customer Hub here
+    #   ------------  Customer Hub here  ------------
 
     def buildCustomerHub(self, customer: Customer):
         pass
 
-    #Staff Hub here
+    #   ------------  Staff Hub here    ------------
 
     def buildStaffHub(self, staff: Staff):
         pass
@@ -698,6 +732,7 @@ if __name__ == "__main__":
     # ---TO DO LIST---
         # Add validation when registering customer and staff, refer to my pseudocode notes in design 
         # Complete all GUI pages and link them together
+        # Check that the log ins work correctly
         # Create time slot management screen design for the documentation 
         # Add a calendar widget for selecting dates in the booking screen
         # On application exit, save data
