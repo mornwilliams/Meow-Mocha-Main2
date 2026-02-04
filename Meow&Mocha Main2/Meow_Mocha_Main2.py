@@ -473,15 +473,18 @@ class MeowMochaApp:
             text="Customer Login",
             font=("Helvetica", 16, "bold"),
             bg="#ffffff",
-        ).pack(pady=10)
+        ).pack(pady=40)
 
-        tk.Label(frame,font = ("Helvetica", 12, "bold"), text="Email:", bg="#ffffff").pack()
-        email_entry = tk.Entry(frame, width=30)
-        email_entry.pack(pady=5)
+        form = tk.Frame(frame, bg="#ffffff")
+        form.pack(pady=10)  #A sub frame so a grid can be used for the form entries
 
-        tk.Label(frame,font = ("Helvetica", 12, "bold"), text="Password:", bg="#ffffff").pack()
-        password_entry = tk.Entry(frame, show="*", width=30)
-        password_entry.pack(pady=5)
+        tk.Label(form,font = ("Helvetica", 12), text="Email:", bg="#ffffff").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        email_entry = tk.Entry(form, width=30)
+        email_entry.grid(row=0, column=1, padx=5, pady=5,)
+
+        tk.Label(form,font = ("Helvetica", 12), text="Password:", bg="#ffffff").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        password_entry = tk.Entry(form, show="*", width=30)
+        password_entry.grid(row=1, column=1, padx=5, pady=5,)
 
         tk.Button(
             frame,
@@ -493,15 +496,16 @@ class MeowMochaApp:
         tk.Label(
             frame,
             text="Not a Customer yet?",
-            font=("Helvetica", 10, "bold"),
+            font=("Helvetica", 10),
             bg="#ffffff",
-        ).pack(pady=5)
+        ).pack(pady=20)
 
         tk.Button(
             frame,
             text="Sign up",
+            font=("Helvetica", 10, "bold"),
             command= self.showCustomerSignUp
-        ).pack(pady=10)
+        ).pack(pady=5)
 
 
         tk.Button(
@@ -518,6 +522,7 @@ class MeowMochaApp:
 
 
     def showCustomerSignUp(self):
+
         self.show_frame(self.buildCustomerSignUpPortal)
 
     def buildCustomerSignUpPortal(self, frame: tk.Frame):
@@ -526,15 +531,92 @@ class MeowMochaApp:
             text="Customer Sign up",
             font=("Helvetica", 16, "bold"),
             bg="#ffffff",
-        ).pack(pady=10)
+        ).pack(pady=35)
+
+        form = tk.Frame(frame, bg="#ffffff") #A sub frame so a grid can be used for the form entries
+        form.pack(pady=20)
 
         # Entries for first name, surname, dob, email, phone number, password
-        tk.label(
-            frame,
+        tk.Label(
+            form,
             text="First Name:",
-            font=("Helvetica", 12, "bold"),
+            font=("Helvetica", 12),
             bg="#ffffff",
-        ).pack()
+        ).grid(row=0, column=0, sticky="w", padx=5, pady=5)
+
+        firstname_entry = tk.Entry(form, width=30)
+        firstname_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(
+            form,
+            text="Surname:",
+            font=("Helvetica", 12),
+            bg="#ffffff",
+        ).grid(row=1, column=0, sticky="w", padx=5, pady=5)
+
+        surname_entry = tk.Entry(form, width=30)
+        surname_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(
+            form,
+            text="E-mail:",
+            font=("Helvetica", 12),
+            bg="#ffffff",
+        ).grid(row=2, column=0, sticky="w", padx=5, pady=5)
+
+        email_entry = tk.Entry(form, width=30)
+        email_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        tk.Label(
+            form,
+            text="Password:",
+            font=("Helvetica", 12),
+            bg="#ffffff",
+        ).grid(row=3, column=0, sticky="w", padx=5, pady=5)
+
+        password_entry = tk.Entry(form, width=30)
+        password_entry.grid(row=3, column=1, padx=5, pady=5)
+
+        tk.Label(
+            form,
+            text="Repeat password:",
+            font=("Helvetica", 12),
+            bg="#ffffff",
+        ).grid(row=4, column=0, sticky="w", padx=5, pady=5)
+
+        repeatpassword_entry = tk.Entry(form, width=30)
+        repeatpassword_entry.grid(row=4, column=1, padx=5, pady=5)
+
+        tk.Label(
+            form,
+            text="Date of Birth:",
+            font=("Helvetica", 12),
+            bg="#ffffff",
+        ).grid(row=5, column=0, sticky="w", padx=5, pady=5)
+
+        tk.Label(
+            form,
+            text="Phone Number:",
+            font=("Helvetica", 12),
+            bg="#ffffff",
+        ).grid(row=6, column=0, sticky="w", padx=5, pady=5)
+
+        phone_entry = tk.Entry(form, width=30)
+        phone_entry.grid(row=6, column=1, padx=5, pady=5)
+
+        tk.Button(
+            frame,
+            text="Sign up",
+            command=lambda: self.handleCustomerSignUp(
+                firstname_entry.get(),
+                surname_entry.get(),
+                email_entry.get(),
+                password_entry.get(),
+                repeatpassword_entry.get(),
+                phone_entry.get()
+                #Date of birth entry to be added later 
+                ),
+        ).pack(pady=10)
 
         tk.Button(
             frame,
@@ -546,6 +628,14 @@ class MeowMochaApp:
     #Staff Portals for LOG IN here
 
     def buildStaffLogInPortal(self):
+        pass
+
+    def handleCustomerSignUp(self):
+        pass
+
+    def handle_staff_login(self, email: str, password: str):
+        # later: call your SystemManager login here, then
+        # self._show_frame(self.buildStaffHub, staff)
         pass
 
     #Customer Hub here
