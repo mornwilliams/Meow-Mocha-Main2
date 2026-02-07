@@ -4,7 +4,7 @@ import csv
 import pickle
 import os
 import tkinter as tk
-from tkinter import messagebox, Image, PhotoImage
+from tkinter import Frame, messagebox, Image, PhotoImage
 from typing import Optional
 
 #-- password hashing, date time conversions here (helper functions)
@@ -517,9 +517,21 @@ class MeowMochaApp:
         ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
 
     def handle_customer_login(self, email: str, password: str):
-        # later: call your SystemManager login here, then
-        # self._show_frame(self.buildCustomerHub, customer)
-        pass
+        email = email.strip()
+        password = password.strip()
+
+        if not email or not password:
+            messagebox.showerror("Log in error", "Please enter both email and password.")
+            return
+        
+        customer = self.system.loginCustomer(email, password)
+        if customer is None:
+            messagebox.showerror("Log in error", "Invalid email or password.")
+            return
+
+        self.show_frame(self.buildCustomerHub, customer)
+        self.showCustomerHub(customer)
+
 
 
     def showCustomerSignUp(self):
@@ -673,9 +685,17 @@ class MeowMochaApp:
         pass
 
     #   ------------  Customer Hub here  ------------
+    def showCustomerHub(self, customer: Customer):
+        self.show_frame(self.buildCustomerHub, customer)
 
-    def buildCustomerHub(self, customer: Customer):
-        pass
+    def buildCustomerHub(self, frame:tk.Frame, customer: Customer):
+        
+        tk.Label(
+            frame,
+            text = "Welcome to Meow&Mocha!",
+            font = ("Helvetica", 16, "bold"),
+            bg = "#ffffff",
+        ).pack(pady=10)
 
     #   ------------  Staff Hub here    ------------
 
