@@ -602,10 +602,13 @@ class MeowMochaApp:
 
         tk.Label(
             form,
-            text="Date of Birth:",
+            text="Date of Birth (YYYY-MM-DD):",
             font=("Helvetica", 12),
             bg="#ffffff",
         ).grid(row=5, column=0, sticky="w", padx=5, pady=5)
+
+        dob_entry = tk.Entry(form, width=30)
+        dob_entry.grid(row=5, column=1, padx=5, pady=5)
 
         tk.Label(
             form,
@@ -626,6 +629,7 @@ class MeowMochaApp:
                 email_entry.get(),
                 password_entry.get(),
                 repeatpassword_entry.get(),
+                dob_entry.get(),
                 phone_entry.get()
                 #Date of birth entry to be added later 
                 ),
@@ -676,8 +680,53 @@ class MeowMochaApp:
             font = ("Helvetica", 12),
         ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
 
-    def handleCustomerSignUp(self):
-        pass
+    def handleCustomerSignUp(self, first_name: str, surname: str, email: str, password: str, repeat_password: str, dob_str: str, phone: str):
+      first_name = first_name.strip()
+      surname = surname.strip()
+      email = email.strip()
+      phone = phone.strip()
+      dob_str = dob_str.strip()
+
+      if not (first_name and surname and email and password and repeat_password and phone and dob_str):
+          messagebox.showerror("Sign up error", "All fields are required.")
+          return
+
+      if password != repeat_password:
+          messagebox.showerror("Sign up error", "Passwords do not match.")
+          return
+
+      try:
+           dob = parseDate(dob_str)
+      except ValueError:
+           messagebox.showerror("Sign up error", "Invalid date format. Please use YYYY-MM-DD.")
+           return
+
+      #add more validation checks here (email format, password strength, phone number format, etc.)
+
+      existing = self.system.findCustomerByEmail(email)
+      if existing is not None:
+          messagebox.showerror("Sign up error", "An account with this email already exists.")
+          return
+
+      customer = self.system.registerCustomer(
+          first_name = first_name,
+          surname= surname,
+          date_of_birth= dob,
+          email=email,
+          phone_number=phone,
+          plain_password=password,
+      )
+
+      #save data after registering
+      self.system.saveData()
+
+      messagebox.showinfo("Sign up successful", "Your account has been created. You can now log in.")
+
+      self.showCustomerLogIn()
+
+
+      
+        
 
     def handle_staff_login(self, email: str, password: str):
         # later: call your SystemManager login here, then
