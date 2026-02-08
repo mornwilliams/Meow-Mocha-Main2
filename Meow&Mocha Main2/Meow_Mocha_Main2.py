@@ -403,7 +403,7 @@ class MeowMochaApp:
         self.system = system
         self.root.configure(bg = "#ffc4df"  ) #pink background 
         self.root.title("Meow&Mocha System")
-        self.root.minsize(800, 500)  
+        self.root.minsize(1000, 650)  
 
         self.logo_image = tk.PhotoImage(file="MM3.png")
         # load data from the system manager (method exists on SystemManager)
@@ -416,7 +416,17 @@ class MeowMochaApp:
             self.current_frame.destroy()
         
         frame = tk.Frame(self.root, bg ="#FFFFFF")
-        frame.pack(padx=20, pady=20,fill="both", expand=True )
+        self.logo_image = tk.PhotoImage(file="MM3.png")
+        # shrink by factor 2 in each direction
+        self.logo_image_small = self.logo_image.subsample(2, 2)
+        logo_label = tk.Label(frame, image=self.logo_image_small, bg="#ffffff")
+        logo_label.image = self.logo_image_small  # keep a reference
+        logo_label = tk.Label(frame, image=self.logo_image_small, bg="#ffffff")
+        logo_label.pack(side="top", anchor="w", padx=10, pady=10)
+
+
+
+        frame.pack(padx=20, pady=10,fill="both", expand=True )
         self.current_frame = frame
 
         builder_function(frame, *args) #Call a "builder function" to populate the frame
@@ -427,9 +437,7 @@ class MeowMochaApp:
 
 
     def build_main_menu(self, frame: tk.Frame):
-        #logo label 
-        logo_label = tk.Label(frame, image=self.logo_image, bg = "#ffffff" )
-        logo_label.pack(pady=10)
+       
         
         tk.Label(
             frame,
@@ -474,7 +482,7 @@ class MeowMochaApp:
             text="Customer Login",
             font=("Helvetica", 16, "bold"),
             bg="#ffffff",
-        ).pack(pady=40)
+        ).pack(pady=10)
 
         form = tk.Frame(frame, bg="#ffffff")
         form.pack(pady=10)  #A sub frame so a grid can be used for the form entries
@@ -492,14 +500,14 @@ class MeowMochaApp:
             text="Log in",
             command=lambda: self.handle_customer_login(email_entry.get(),
                                                        password_entry.get()),
-        ).pack(pady=10)
+        ).pack(pady=20)
 
         tk.Label(
             frame,
             text="Not a Customer yet?",
             font=("Helvetica", 10),
             bg="#ffffff",
-        ).pack(pady=20)
+        ).pack(pady=5)
 
         tk.Button(
             frame,
