@@ -408,8 +408,38 @@ class MeowMochaApp:
         self.logo_image = tk.PhotoImage(file="MM3.png")
         # load data from the system manager (method exists on SystemManager)
         self.system.loadData()
+        self.testStaffAccount()
         self.current_frame = None
         self.showMainMenu()
+
+    def testStaffAccount(self):
+        #create a test staff account if none exist (for testing purposes)
+        test_email = "staff@test.com"
+        test_admin_email = "admin@test.com"
+        existing = self.system.findStaffByEmail(test_email)
+        if existing is not None:
+            return
+
+        self.system.registerStaff( #<-- creates a test staff account with email "
+            first_name="Test",
+            surname="Staff",
+            date_of_birth=parseDate("1990-01-01"),
+            email=test_email,
+            phone_number="1234567890",
+            plain_password="password123",
+            higher_admin=False
+        )
+
+        self.system.registerStaff( #<-- creates a test staff account with email "
+            first_name="Test",
+            surname="Admin",
+            date_of_birth=parseDate("1990-01-01"),
+            email=test_admin_email,
+            phone_number="1234567890",
+            plain_password="password123",
+            higher_admin=True
+        )
+        self.system.saveData() #save data after creating test account
 
     def show_frame (self, builder_function, *args):
         if self.current_frame is not None:
@@ -442,34 +472,27 @@ class MeowMochaApp:
         tk.Label(
             frame,
             text = "Welcome to Meow&Mocha!",
-            font = ("Helvetica", 16, "bold"),
+            font = ("Helvetica", 20, "bold"),
             bg = "#ffffff",
-        ).pack(pady=10)
+        ).pack(pady=30)
 
         tk.Button(
             frame,
             text="Customer Portal",
-            font = ("Helvetica", 12),
+            font = ("Helvetica", 16),
             width=20,
             command = self.showCustomerLogIn
         ).pack(pady=5)
         tk.Button(
             frame,
             text="Staff Portal",
-            font = ("Helvetica", 12),
+            font = ("Helvetica", 16),
             width=20,
             command= self.showStaffLogIn
             #command will go here (show_staff_login)
             
         ).pack(pady=5)#
-        tk.Button(
-            frame,
-            text="Admin Portal",
-            font = ("Helvetica", 12),
-            width=20,
-            #command will go here (show_admin_login)
-            
-        ).pack(pady=5)
+        
 
     # ──────  Customer Portals fpr LOG IN and SIGN UP here ───────────
 
@@ -480,7 +503,7 @@ class MeowMochaApp:
         tk.Label(
             frame,
             text="Customer Login",
-            font=("Helvetica", 16, "bold"),
+            font=("Helvetica", 20, "bold"),
             bg="#ffffff",
         ).pack(pady=10)
 
@@ -498,6 +521,7 @@ class MeowMochaApp:
         tk.Button(
             frame,
             text="Log in",
+            font=("Helvetica", 14, "bold"),
             command=lambda: self.handle_customer_login(email_entry.get(),
                                                        password_entry.get()),
         ).pack(pady=20)
@@ -512,7 +536,7 @@ class MeowMochaApp:
         tk.Button(
             frame,
             text="Sign up",
-            font=("Helvetica", 10, "bold"),
+            font=("Helvetica", 14, "bold"),
             command= self.showCustomerSignUp
         ).pack(pady=5)
 
@@ -550,9 +574,9 @@ class MeowMochaApp:
         tk.Label(
             frame,
             text="Customer Sign up",
-            font=("Helvetica", 16, "bold"),
+            font=("Helvetica", 20, "bold"),
             bg="#ffffff",
-        ).pack(pady=35)
+        ).pack(pady=20)
 
         form = tk.Frame(frame, bg="#ffffff") #A sub frame so a grid can be used for the form entries
         form.pack(pady=20)
@@ -734,12 +758,26 @@ class MeowMochaApp:
 
 
       
-        
+    #   ------------  Staff login handling here  ------------    
 
     def handle_staff_login(self, email: str, password: str):
-        # later: call your SystemManager login here, then
-        # self._show_frame(self.buildStaffHub, staff)
-        pass
+       email = email.strip()
+       password = password.strip()
+
+       if not email or not password:
+          messagebox.showerror("Log in error", "Please enter both email and password.")
+          return
+    
+       staff = self.system.loginStaff(email, password)
+       if staff is None:
+          messagebox.showerror("Log in error", "Invalid email or password.")
+          return
+
+       if staff.higher_admin:
+              self.show_frame(self.adminHub, staff)
+       else:
+           self.show_frame(self.buildStaffHub, staff)
+       
 
     #   ------------  Customer Hub here  ------------
     def showCustomerHub(self, customer: Customer):
@@ -754,14 +792,60 @@ class MeowMochaApp:
             bg = "#ffffff",
         ).pack(pady=10)
 
+        tk.Button(
+            frame,
+            text = "Create a new booking",
+            font = ("Helvetica", 14),
+            command = self.showCustomerBookingPage
+            ).pack(pady=5)
+
+        tk.Button(
+            frame,
+            text = "View my bookings",
+            font = ("Helvetica", 14),
+            command = self.showCustomerViewBookingPage(customer)
+            ).pack(pady=5)
+
+
+        #sign out button
+
     #   ------------  Staff Hub here    ------------
 
-    def buildStaffHub(self, staff: Staff):
-        pass
-    def customerBookingPage(self):
-        pass
+    def showStaffHub(self, staff:Staff):
+        self.show_frame(self.buildStaffHub, staff)
+
+    def buildStaffHub(self, frame: tk.Frame, staff: Staff):
+         tk.Label(
+            frame,
+            text=f"Staff hub – welcome, {staff.first_name}",
+            font=("Helvetica", 16, "bold"),
+            bg="#ffffff",
+         ).pack(pady=10)
+
+
+        #sign out button
+
+
+    #   ------------  Customer Booking page ------------
+
+    def showCustomerBookingPage(self):
+        self.show_frame(self.customerBookingPage)
+        
+    def customerBookingPage(self, frame:tk.Frame):
+        tk.Button(
+            frame,
+            text="Back",
+            command=self.showCustomerHub,
+            font = ("Helvetica", 12),
+        ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
+
+    # ------------  Staff Booking management page (same for higher and lower admins) ------------
+
     def staffAdminBookingPage(self): # <-- booking page will be the same for staff and higher admins
         pass   
+
+    def showCustomerViewBookingPage(self, customer: Customer):
+        self.show_frame(self.customerViewBookingPage, customer)
 
     def customerViewBookingPage(self, customer: Customer):
         pass
@@ -771,8 +855,17 @@ class MeowMochaApp:
         pass
     def manageAccountPage(self, user):
         pass
-    def adminHub(self, admin: Staff):
-        pass
+
+
+    def adminHub(self, frame: tk.Frame, admin: Staff):
+        tk.Label(
+            frame,
+            text=f"Admin hub – welcome, {admin.first_name}",
+            font=("Helvetica", 16, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+
     def createStaffAccount(self, admin: Staff):
         pass
     def viewAllAccounts(self, admin: Staff):
@@ -809,7 +902,7 @@ if __name__ == "__main__":
     # ---TO DO LIST---
         # Add validation when registering customer and staff, refer to my pseudocode notes in design 
         # Complete all GUI pages and link them together
-        # Check that the log ins work correctly
+        # Check that the log ins work correctly - DONE
         # Create time slot management screen design for the documentation 
         # Add a calendar widget for selecting dates in the booking screen
         # On application exit, save data
