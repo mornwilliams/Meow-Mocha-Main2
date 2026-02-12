@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import Frame, messagebox, Image, PhotoImage
 from typing import Optional
 
+
 #-- password hashing, date time conversions here (helper functions)
 
 def hashPassword(plain:str) -> str:
@@ -806,6 +807,14 @@ class MeowMochaApp:
           command=lambda c=customer: self.showCustomerViewBookingPage(c),
         ).pack(pady=5)
 
+        tk.Button(
+          frame,
+          text="Manage my account",
+          font=("Helvetica", 14),
+        command=lambda: self.manageAccountPage(customer),
+        ).pack(pady=5)
+
+
 
 
         #sign out button
@@ -822,6 +831,13 @@ class MeowMochaApp:
             font=("Helvetica", 16, "bold"),
             bg="#ffffff",
          ).pack(pady=10)
+
+         tk.Button(
+             frame,
+             text="Manage my account",
+             font=("Helvetica", 14),
+             command=lambda: self.manageAccountPage(staff),
+         ).pack(pady=5)
 
 
         #sign out button
@@ -854,8 +870,179 @@ class MeowMochaApp:
         pass
     def staffViewAllBookingsPage(self, staff: Staff):
         pass
+
+
+   #account management page for both customers and staff (editing details, changing password, etc.)
+
     def manageAccountPage(self, user):
-        pass
+    # user is either a Customer or Staff
+        self.show_frame(self.buildManageAccountPage, user)
+
+
+    def buildManageAccountPage(self, frame: tk.Frame, user):
+        is_staff = isinstance(user, Staff)
+
+        tk.Label(
+            frame,
+            text="Manage my account",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=20)
+
+        form = tk.Frame(frame, bg="#ffffff")
+        form.pack(pady=10)
+
+        # First name
+        tk.Label(form, text="First name:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        first_entry = tk.Entry(form, width=30)
+        first_entry.grid(row=0, column=1, padx=5, pady=5)
+        first_entry.insert(0, user.first_name)
+
+        # Surname
+        tk.Label(form, text="Surname:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        surname_entry = tk.Entry(form, width=30)
+        surname_entry.grid(row=1, column=1, padx=5, pady=5)
+        surname_entry.insert(0, user.surname)
+
+        # Email
+        tk.Label(form, text="Email:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        email_entry = tk.Entry(form, width=30)
+        email_entry.grid(row=2, column=1, padx=5, pady=5)
+        email_entry.insert(0, user.email)
+
+        # Phone
+        tk.Label(form, text="Phone number:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        phone_entry = tk.Entry(form, width=30)
+        phone_entry.grid(row=3, column=1, padx=5, pady=5)
+        phone_entry.insert(0, user.phone_number)
+
+        # Optional: change password fields
+        tk.Label(form, text="New password:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        new_pass_entry = tk.Entry(form, width=30, show="*")
+        new_pass_entry.grid(row=4, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Repeat new password:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=5, column=0, sticky="w", padx=5, pady=5)
+        repeat_pass_entry = tk.Entry(form, width=30, show="*")
+        repeat_pass_entry.grid(row=5, column=1, padx=5, pady=5)
+
+        def save_changes():
+            # basic trimming + validation; expand if you like
+            fn = first_entry.get().strip()
+            sn = surname_entry.get().strip()
+            em = email_entry.get().strip()
+            ph = phone_entry.get().strip()
+            new_pw = new_pass_entry.get()
+            rep_pw = repeat_pass_entry.get()
+
+            if not (fn and sn and em and ph):
+                messagebox.showerror("Error", "Name, email and phone cannot be empty.")
+                return
+
+            if new_pw or rep_pw:
+                if new_pw != rep_pw:
+                    messagebox.showerror("Error", "New passwords do not match.")
+                    return
+                # update password hash
+                user.setPassword(new_pw)
+
+            # update fields on the object
+            user.editFirstName(fn)
+            user.editSurname(sn)
+            user.editEmail(em)
+            user.editPhoneNumber(ph)
+
+            # save to disk
+            self.system.saveData()
+
+            messagebox.showinfo("Saved", "Your account details have been updated.")
+
+            # go back to appropriate hub
+            if isinstance(user, Customer):
+                self.showCustomerHub(user)
+            else:
+                if isinstance(user, Staff) and user.higher_admin:
+                    self.show_frame(self.adminHub, user)
+                else:
+                    self.showStaffHub(user)
+
+        tk.Button(
+            frame,
+            text="Save changes",
+            font=("Helvetica", 14, "bold"),
+            command=save_changes,
+        ).pack(pady=10)
+
+        tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=(lambda: self.showCustomerHub(user)) if isinstance(user, Customer)
+                    else (lambda: self.showStaffHub(user) if not user.higher_admin
+                          else lambda: self.show_frame(self.adminHub, user)),
+        ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
+
+        tk.Button(
+            frame,
+            text="Log out",
+            font=("Helvetica", 12),
+            command=self.logout,
+        ).pack(pady=5)
+
+
+        tk.Button(
+            frame,
+            text="Delete my account",
+            font=("Helvetica", 12),
+            fg="red",
+            command=lambda: self.deleteAccount(user),
+        ).pack(pady=10)
+
+# ----------- Log out function, used by both staff and customers (just goes back to main menu) -------
+
+    def logout(self):
+        # Optionally show a confirmation
+        answer = messagebox.askyesno(
+            "Log out",
+            "Are you sure you want to log out?"
+        )
+        if not answer:
+            return
+
+        # Simply go back to the main menu
+        self.showMainMenu()
+
+
+
+# ------- Delete account function, used by both staff and customers -------
+
+    def deleteAccount(self, user):
+        # Ask for confirmation
+        answer = messagebox.askyesno(
+            "Confirm delete",
+            "Are you sure you want to delete your account? This action cannot be undone."
+        )
+        if not answer:
+            return  # user clicked "No"
+
+        # Remove from the correct list on SystemManager
+        if isinstance(user, Customer):
+            self.system.customers = [c for c in self.system.customers if c.customer_id != user.customer_id]
+        elif isinstance(user, Staff):
+            self.system.staff = [s for s in self.system.staff if s.staff_id != user.staff_id]
+
+        # Save changes
+        self.system.saveData()
+
+        messagebox.showinfo("Account deleted", "Your account has been deleted.")
+
+        # Send them back to main menu
+        self.showMainMenu()
 
 
     def adminHub(self, frame: tk.Frame, admin: Staff):
@@ -865,6 +1052,14 @@ class MeowMochaApp:
             font=("Helvetica", 16, "bold"),
             bg="#ffffff",
         ).pack(pady=10)
+         
+        tk.Button(
+            frame,
+            text="Manage my account",
+            font=("Helvetica", 14),
+            command=lambda: self.manageAccountPage(admin),
+        ).pack(pady=5)
+
 
 
     def createStaffAccount(self, admin: Staff):
