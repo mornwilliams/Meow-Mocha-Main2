@@ -561,7 +561,7 @@ class MeowMochaApp:
             messagebox.showerror("Log in error", "Invalid email or password.")
             return
 
-        self.show_frame(self.buildCustomerHub, customer)
+       
         self.showCustomerHub(customer)
 
 
@@ -800,11 +800,12 @@ class MeowMochaApp:
             ).pack(pady=5)
 
         tk.Button(
-            frame,
-            text = "View my bookings",
-            font = ("Helvetica", 14),
-            command = self.showCustomerViewBookingPage(customer)
-            ).pack(pady=5)
+          frame,
+          text="View my bookings",
+          font=("Helvetica", 14),
+          command=lambda c=customer: self.showCustomerViewBookingPage(c),
+        ).pack(pady=5)
+
 
 
         #sign out button
