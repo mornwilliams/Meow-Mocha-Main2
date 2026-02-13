@@ -1,1 +1,2 @@
 timeslot_id,date,start_time,end_time,max_capacity,is_available
+T00001,2026-02-19,09:00,10:00,8,True

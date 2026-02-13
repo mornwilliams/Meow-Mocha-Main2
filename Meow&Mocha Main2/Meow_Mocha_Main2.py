@@ -4,8 +4,9 @@ import csv
 import pickle
 import os
 import tkinter as tk
-from tkinter import Frame, messagebox, Image, PhotoImage
+from tkinter import Frame, messagebox, Image, PhotoImage, ttk
 from typing import Optional
+from tkcalendar import Calendar, DateEntry
 
 
 #-- password hashing, date time conversions here (helper functions)
@@ -797,7 +798,7 @@ class MeowMochaApp:
             frame,
             text = "Create a new booking",
             font = ("Helvetica", 14),
-            command = self.showCustomerBookingPage
+            command=lambda: self.showCustomerBookingPage(customer)
             ).pack(pady=5)
 
         tk.Button(
@@ -845,16 +846,150 @@ class MeowMochaApp:
 
     #   ------------  Customer Booking page ------------
 
-    def showCustomerBookingPage(self):
-        self.show_frame(self.customerBookingPage)
+    def showCustomerBookingPage(self, customer: Customer):
+        self.show_frame(self.customerBookingPage, customer)
         
-    def customerBookingPage(self, frame:tk.Frame):
+    def customerBookingPage(self, frame:tk.Frame, customer: Customer):
+
+        tk.Label(
+            frame,
+            text="Make a Booking",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+        # Calendar on the left
+        cal_frame = tk.Frame(frame, bg="#ffffff")
+        cal_frame.pack(side="left", padx=20, pady=10)
+
+        tk.Label(
+            cal_frame,
+            text="Select date:",
+            font=("Helvetica", 12, "bold"),
+            bg="#ffffff",
+        ).pack(anchor="w")
+
+        self.booking_calendar = Calendar(
+            cal_frame,
+            selectmode="day",
+            date_pattern="yyyy-mm-dd",   # matches parseDate
+        )
+        self.booking_calendar.pack(pady=5)
+
+        # Right‑side controls
+        right = tk.Frame(frame, bg="#ffffff")
+        right.pack(side="left", padx=40, pady=10, fill="y")
+
+        tk.Label(right, text="From:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        tk.Label(right, text="To:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=1, column=0, padx=5, pady=5, sticky="w")
+
+        times = []
+        for h in range(8, 22):      # e.g. 08:00–21:30; adjust as needed
+            for m in (0, 30):
+                times.append(f"{h:02d}:{m:02d}")
+
+        self.from_combo = ttk.Combobox(right, values=times, width=10, state="readonly")
+        self.from_combo.grid(row=0, column=1, padx=5, pady=5)
+        self.to_combo = ttk.Combobox(right, values=times, width=10, state="readonly")
+        self.to_combo.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(right, text="Number of guests:", font=("Helvetica", 12), bg="#ffffff")\
+                .grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.guests_spin = tk.Spinbox(right, from_=1, to=10, width=5)  # adjust max as needed
+        self.guests_spin.grid(row=2, column=1, padx=5, pady=5)
+
+        tk.Button(
+            right,
+            text="Create Booking",
+            font=("Helvetica", 14, "bold"),
+            command=lambda: self.handleCreateBooking(customer),
+        ).grid(row=3, column=0, columnspan=2, pady=20)
+
         tk.Button(
             frame,
             text="Back",
-            command=self.showCustomerHub,
-            font = ("Helvetica", 12),
-        ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
+            font=("Helvetica", 12),
+            command=lambda: self.showCustomerHub(customer),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
+
+# ---------- Booking creation logic (validation, capacity checks, etc.) ----------
+
+    def handleCreateBooking(self, customer: Customer):
+        date_str = self.booking_calendar.get_date()  # 'YYYY-MM-DD'
+        from_str = self.from_combo.get()
+        to_str = self.to_combo.get()
+        guests_str = self.guests_spin.get()
+
+        # Basic validation
+        if not (date_str and from_str and to_str and guests_str):
+            messagebox.showerror("Error", "Please select date, start time, end time and number of guests.")
+            return
+
+        try:
+            booking_date = parseDate(date_str)
+            start_time = parseTime(from_str)
+            end_time = parseTime(to_str)
+        except ValueError:
+            messagebox.showerror("Error", "Invalid date or time format.")
+            return
+
+        if end_time <= start_time:
+            messagebox.showerror("Error", "End time must be after start time.")
+            return
+
+        # Only allow 30 or 60 minutes
+        delta = datetime.combine(booking_date, end_time) - datetime.combine(booking_date, start_time)
+        minutes = delta.total_seconds() / 60
+        if minutes not in (30, 60):
+            messagebox.showerror("Error", "Bookings must be 30 minutes or 1 hour long.")
+            return
+
+        try:
+            guests = int(guests_str)
+            if guests <= 0:
+                raise ValueError
+        except ValueError:
+            messagebox.showerror("Error", "Number of guests must be a positive integer.")
+            return
+
+        # Find or create a matching TimeSlot
+        timeslot = None
+        for ts in self.system.timeslots:
+            if (ts.date == booking_date and
+                ts.start_time == start_time and
+                ts.end_time == end_time):
+                timeslot = ts
+                break
+
+        if timeslot is None:
+            # Default capacity, adjust as you like
+            timeslot = TimeSlot(
+                timeslot_id=self.system.generateTimeSlotID(),
+                date=booking_date,
+                start_time=start_time,
+                end_time=end_time,
+                max_capacity=8,  # e.g. 8 people per slot
+                is_available=True,
+            )
+            self.system.timeslots.append(timeslot)
+
+        # Use existing capacity logic in SystemManager
+        try:
+            booking = self.system.createBooking(customer, timeslot, guests)
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
+            return
+
+        # Persist to CSV + update availability flags
+        self.system.saveData()
+        messagebox.showinfo("Success", f"Booking {booking.booking_id} created.")
+        # Optionally return to hub:
+        self.showCustomerHub(customer)
+
+        
 
     # ------------  Staff Booking management page (same for higher and lower admins) ------------
 
