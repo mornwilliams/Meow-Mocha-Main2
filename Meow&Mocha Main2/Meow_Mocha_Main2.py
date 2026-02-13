@@ -1238,6 +1238,6 @@ if __name__ == "__main__":
         # Add a calendar widget for selecting dates in the booking screen
         # On application exit, save data
         # Organise time slots so that you can select either 30 minute sessions or 1 hour sessions
-
+        # change opening times for time slots (9-4pm for example)
 
 
