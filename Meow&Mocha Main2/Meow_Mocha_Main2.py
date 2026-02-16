@@ -802,11 +802,12 @@ class MeowMochaApp:
             ).pack(pady=5)
 
         tk.Button(
-          frame,
-          text="View my bookings",
-          font=("Helvetica", 14),
-          command=lambda c=customer: self.showCustomerViewBookingPage(c),
+            frame,
+            text="View my bookings",
+            font=("Helvetica", 14),
+            command=lambda: self.showCustomerViewBookingPage(customer),
         ).pack(pady=5)
+
 
         tk.Button(
           frame,
@@ -999,8 +1000,92 @@ class MeowMochaApp:
     def showCustomerViewBookingPage(self, customer: Customer):
         self.show_frame(self.customerViewBookingPage, customer)
 
-    def customerViewBookingPage(self, customer: Customer):
-        pass
+    def customerViewBookingPage(self, frame: tk.Frame, customer: Customer):
+        tk.Label(
+            frame,
+            text="My bookings",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+        # Prepare data: filter bookings for this customer
+        customer_bookings = [
+            b for b in self.system.bookings
+            if b.customer_id == customer.customer_id
+        ]
+
+        # Frame for table + scrollbar
+        table_frame = tk.Frame(frame, bg="#ffffff")
+        table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        columns = ("date", "start", "end", "guests", "status")
+
+        tree = ttk.Treeview(
+            table_frame,
+            columns=columns,
+            show="headings",
+            height=10,
+        )
+
+        tree.heading("date", text="Date")
+        tree.heading("start", text="Start")
+        tree.heading("end", text="End")
+        tree.heading("guests", text="Guests")
+        tree.heading("status", text="Status")
+
+        tree.column("date", width=100, anchor="center")
+        tree.column("start", width=70, anchor="center")
+        tree.column("end", width=70, anchor="center")
+        tree.column("guests", width=60, anchor="center")
+        tree.column("status", width=100, anchor="center")
+
+        # Vertical scrollbar
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        tree.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        table_frame.rowconfigure(0, weight=1)
+        table_frame.columnconfigure(0, weight=1)
+
+        # Build a quick lookup for timeslots
+        timeslot_by_id = {ts.timeslot_id: ts for ts in self.system.timeslots}
+
+        # Insert rows
+        for booking in customer_bookings:
+            ts = timeslot_by_id.get(booking.timeslot_id)
+            if ts is None:
+                # timeslot missing; show placeholders
+                date_str = "?"
+                start_str = "?"
+                end_str = "?"
+            else:
+                date_str = formatDate(ts.date)
+                start_str = formatTime(ts.start_time)
+                end_str = formatTime(ts.end_time)
+
+            tree.insert(
+                "",
+                "end",
+                values=(
+                    date_str,
+                    start_str,
+                    end_str,
+                    booking.number_of_guests,
+                    booking.status,
+                ),
+            )
+
+        # Back button
+        tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=lambda: self.showCustomerHub(customer),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
+
     def staffViewCustomersPage(self, staff: Staff):
         pass
     def staffViewAllBookingsPage(self, staff: Staff):
