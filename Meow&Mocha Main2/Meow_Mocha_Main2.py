@@ -4,7 +4,7 @@ import csv
 import pickle
 import os
 import tkinter as tk
-from tkinter import Frame, messagebox, Image, PhotoImage, ttk
+from tkinter import Frame, messagebox, Image, PhotoImage, ttk, simpledialog
 from typing import Optional
 from tkcalendar import Calendar, DateEntry
 
@@ -1052,6 +1052,8 @@ class MeowMochaApp:
         # Build a quick lookup for timeslots
         timeslot_by_id = {ts.timeslot_id: ts for ts in self.system.timeslots}
 
+        self.customer_bookings_tree = tree  # keep reference on self for handlers
+
         # Insert rows
         for booking in customer_bookings:
             ts = timeslot_by_id.get(booking.timeslot_id)
@@ -1068,6 +1070,7 @@ class MeowMochaApp:
             tree.insert(
                 "",
                 "end",
+                iid=booking.booking_id,
                 values=(
                     date_str,
                     start_str,
@@ -1077,6 +1080,24 @@ class MeowMochaApp:
                 ),
             )
 
+        buttons_frame = tk.Frame(frame, bg="#ffffff")
+        buttons_frame.pack(pady=10)
+
+        tk.Button(
+            buttons_frame,
+            text="Edit selected",
+            font=("Helvetica", 12),
+            command=lambda: self.handleEditBooking(customer),
+        ).grid(row=0, column=0, padx=5)
+
+        tk.Button(
+            buttons_frame,
+            text="Cancel selected",
+            font=("Helvetica", 12),
+            command=lambda: self.handleCancelBooking(customer),
+        ).grid(row=0, column=1, padx=5)
+
+
         # Back button
         tk.Button(
             frame,
@@ -1085,6 +1106,95 @@ class MeowMochaApp:
             command=lambda: self.showCustomerHub(customer),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
+    def _get_selected_booking(self) -> Optional[Booking]:
+        tree = self.customer_bookings_tree
+        selected = tree.selection()
+        if not selected:
+            messagebox.showerror("Error", "Please select a booking first.")
+            return None
+
+        booking_id = selected[0]  # because iid=booking_id
+        booking = next((b for b in self.system.bookings if b.booking_id == booking_id), None)
+        if booking is None:
+            messagebox.showerror("Error", "Selected booking not found.")
+        return booking
+
+    def handleCancelBooking(self, customer: Customer):
+        booking = self._get_selected_booking()
+        if booking is None:
+            return
+
+        if booking.status != "BOOKED":
+            messagebox.showerror("Error", "Only bookings with status BOOKED can be cancelled.")
+            return
+
+        confirm = messagebox.askyesno(
+            "Confirm cancel",
+            f"Cancel booking {booking.booking_id}?"
+        )
+        if not confirm:
+            return
+
+        # Update booking and timeslot availability
+        self.system.cancelBooking(booking)
+        self.system.saveData()
+
+        messagebox.showinfo("Cancelled", f"Booking {booking.booking_id} has been cancelled.")
+
+        # Refresh the view
+        self.showCustomerViewBookingPage(customer)
+
+    def handleEditBooking(self, customer: Customer):
+        booking = self._get_selected_booking()
+        if booking is None:
+            return
+
+        if booking.status != "BOOKED":
+            messagebox.showerror("Error", "Only bookings with status BOOKED can be edited.")
+            return
+
+        new_guests_str = simpledialog.askstring(
+            "Edit booking",
+            f"Enter new number of guests (current: {booking.number_of_guests}):"
+        )
+        if new_guests_str is None:
+            return  # user cancelled
+
+        try:
+            new_guests = int(new_guests_str)
+            if new_guests <= 0:
+                raise ValueError
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a positive integer.")
+            return
+
+        # Find the timeslot
+        ts = next((t for t in self.system.timeslots if t.timeslot_id == booking.timeslot_id), None)
+        if ts is None:
+            messagebox.showerror("Error", "Time slot for this booking no longer exists.")
+            return
+
+        # Current guests in this slot, excluding this booking
+        current_without_this = 0
+        for b in self.system.bookings:
+            if (
+                b.timeslot_id == ts.timeslot_id
+                and b.status == "BOOKED"
+                and b.booking_id != booking.booking_id
+            ):
+                current_without_this += b.number_of_guests
+
+        if current_without_this + new_guests > ts.max_capacity:
+            messagebox.showerror("Error", "Cannot update: this would exceed the time slot capacity.")
+            return
+
+        # Apply update
+        booking.number_of_guests = new_guests
+        self.system.recalculateTimeSlotAvailability(ts)
+        self.system.saveData()
+
+        messagebox.showinfo("Updated", f"Booking {booking.booking_id} has been updated.")
+        self.showCustomerViewBookingPage(customer)
 
     def staffViewCustomersPage(self, staff: Staff):
         pass
@@ -1324,5 +1434,7 @@ if __name__ == "__main__":
         # On application exit, save data
         # Organise time slots so that you can select either 30 minute sessions or 1 hour sessions
         # change opening times for time slots (9-4pm for example)
+        # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
+
 
 
