@@ -993,10 +993,99 @@ class MeowMochaApp:
         
 
     # ------------  Staff Booking management page (same for higher and lower admins) ------------
+    def showStaffCreateBookingPage(self,staff:Staff):
+        self.show_frame(self.staffAdminBookingPage, staff)
 
-    def staffAdminBookingPage(self): # <-- booking page will be the same for staff and higher admins
-        pass   
+    def staffAdminBookingPage(self, frame: tk.Frame, staff): # <-- booking page will be the same for staff and higher admins
+        tk.Label(
+            frame,
+            text="Create Booking for Customer",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
 
+        # Customer lookup section
+        lookup_frame = tk.Frame(frame, bg="#ffffff", relief="solid", bd=1)
+        lookup_frame.pack(pady=10, padx=20, fill="x")
+
+        tk.Label(
+            lookup_frame,
+            text="Customer Lookup",
+            font=("Helvetica", 12, "bold"),
+            bg="#ffffff",
+        ).pack(pady=5)
+
+        form_frame = tk.Frame(lookup_frame, bg="#ffffff")
+        form_frame.pack(pady=5)
+
+        tk.Label(
+            form_frame,
+            text="Customer ID or Email:",
+            font=("Helvetica", 11),
+            bg="#ffffff",
+        ).grid(row=0, column=0, sticky="w", padx=5, pady=5)
+
+        customer_lookup_entry = tk.Entry(form_frame, width=30)
+        customer_lookup_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        #storing the selected customer in a variable
+
+        self.selected_customer = None
+        selected_customer_label = tk.Label(
+            form_frame,
+            text="No customer selected",
+            font=("Helvetica", 10, "italic"),
+            bg="#ffffff",
+            )
+
+        selected_customer_label.grid(row=1, column=0, columnspan=2, pady=5)
+
+        def lookup_customer():
+            query = customer_lookup_entry.get().strip()
+            if not query:
+                messagebox.showerror("Error", "Please enter a customer ID or email.")
+                return
+            # Try ID lookup first
+            customer = next((c for c in self.system.customers if c.customer_id == query), None)
+            if customer is None:
+                # Try email lookup
+                customer = self.system.findCustomerByEmail(query)
+            if customer is None:
+                messagebox.showerror("Error", "Customer not found.")
+                return
+            self.selected_customer = customer
+            selected_customer_label.config(text=f"Selected: {customer.first_name} {customer.surname} ({customer.email})"
+                                           )
+            tk.Button(
+                form_frame,
+                text="Search",
+                font=("Helvetica", 11),
+                command=lookup_customer,
+             ).grid(row=0, column=2, padx=5, pady=5)
+            
+            #Booking details section (same as customer booking page, but disabled until a customer is selected)
+            booking_frame = tk.Frame(frame, bg="#ffffff")
+            booking_frame.pack(pady=10, padx=20, fill="x")
+
+            tk.Label(
+                booking_frame,
+                text="Booking Details",
+                font=("Helvetica", 12, "bold"),
+                bg="#ffffff",
+                ).pack(pady=5)
+
+            details_form = tk.Frame(booking_frame, bg="#ffffff")
+            details_form.pack(pady=5)
+
+            tk.Label(
+                    details_form,
+                    text="Select date:",
+                    font=("Helvetica", 11, "bold"),
+                    bg="#ffffff",
+            ).pack(anchor="w", padx=5)
+
+           
+        
     def showCustomerViewBookingPage(self, customer: Customer):
         self.show_frame(self.customerViewBookingPage, customer)
 
@@ -1430,11 +1519,11 @@ if __name__ == "__main__":
         # Complete all GUI pages and link them together
         # Check that the log ins work correctly - DONE
         # Create time slot management screen design for the documentation 
-        # Add a calendar widget for selecting dates in the booking screen
-        # On application exit, save data
+        # Add a calendar widget for selecting dates in the booking screen - DONE
+        # On application exit, save data - DONE?
         # Organise time slots so that you can select either 30 minute sessions or 1 hour sessions
         # change opening times for time slots (9-4pm for example)
         # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
-
+        # Add creating bookings for staff and admins, and viewing all bookings for staff and admins
 
 
