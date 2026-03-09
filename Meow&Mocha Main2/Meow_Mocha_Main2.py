@@ -841,6 +841,12 @@ class MeowMochaApp:
              command=lambda: self.manageAccountPage(staff),
          ).pack(pady=5)
 
+         tk.Button(
+            frame,
+            text="Create booking for customer",
+            font=("Helvetica", 14),
+            command=lambda: self.showStaffAdminBookingPage(staff),
+         ).pack(pady=5)
 
         #sign out button
 
@@ -887,9 +893,10 @@ class MeowMochaApp:
             .grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
         times = []
-        for h in range(8, 22):      # e.g. 08:00–21:30; adjust as needed
+        for h in range(9, 16):      # this will create time slots from 9:00 to 16:30
             for m in (0, 30):
                 times.append(f"{h:02d}:{m:02d}")
+        times.append("16:00") #this makes 16:00 a valid end time, but not a start time
 
         self.from_combo = ttk.Combobox(right, values=times, width=10, state="readonly")
         self.from_combo.grid(row=0, column=1, padx=5, pady=5)
@@ -1004,85 +1011,89 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
-        # Customer lookup section
-        lookup_frame = tk.Frame(frame, bg="#ffffff", relief="solid", bd=1)
-        lookup_frame.pack(pady=10, padx=20, fill="x")
+        # Top: customer lookup
+        top = tk.Frame(frame, bg="#ffffff")
+        top.pack(pady=5)
 
         tk.Label(
-            lookup_frame,
-            text="Customer Lookup",
+            top,
+            text="Customer email or ID:",
+            font=("Helvetica", 12),
+            bg="#ffffff",
+        ).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+        self.staff_booking_customer_entry = tk.Entry(top, width=30)
+        self.staff_booking_customer_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        # Left: calendar
+        cal_frame = tk.Frame(frame, bg="#ffffff")
+        cal_frame.pack(side="left", padx=20, pady=10)
+
+        tk.Label(
+            cal_frame,
+            text="Select date:",
             font=("Helvetica", 12, "bold"),
             bg="#ffffff",
-        ).pack(pady=5)
+        ).pack(anchor="w")
 
-        form_frame = tk.Frame(lookup_frame, bg="#ffffff")
-        form_frame.pack(pady=5)
+        self.staff_booking_calendar = Calendar(
+            cal_frame,
+            selectmode="day",
+            date_pattern="yyyy-mm-dd",
+        )
+        self.staff_booking_calendar.pack(pady=5)
+
+        # Right: time + guests
+        right = tk.Frame(frame, bg="#ffffff")
+        right.pack(side="left", padx=40, pady=10, fill="y")
+
+        tk.Label(right, text="From:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        tk.Label(right, text="To:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=1, column=0, padx=5, pady=5, sticky="w")
+
+        times = []
+        for h in range(9, 16):
+            for m in (0, 30):
+                times.append(f"{h:02d}:{m:02d}")
+        times.append("16:00") 
+
+
+        self.staff_from_combo = ttk.Combobox(right, values=times, width=10, state="readonly")
+        self.staff_from_combo.grid(row=0, column=1, padx=5, pady=5)
+
+        self.staff_to_combo = ttk.Combobox(right, values=times, width=10, state="readonly")
+        self.staff_to_combo.grid(row=1, column=1, padx=5, pady=5)
 
         tk.Label(
-            form_frame,
-            text="Customer ID or Email:",
-            font=("Helvetica", 11),
+            right,
+            text="Number of guests:",
+            font=("Helvetica", 12),
             bg="#ffffff",
-        ).grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        ).grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
-        customer_lookup_entry = tk.Entry(form_frame, width=30)
-        customer_lookup_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.staff_guests_spin = tk.Spinbox(right, from_=1, to=10, width=5)
+        self.staff_guests_spin.grid(row=2, column=1, padx=5, pady=5)
 
-        #storing the selected customer in a variable
+        # Create booking button
+        tk.Button(
+            right,
+            text="Create booking",
+            font=("Helvetica", 14, "bold"),
+            command=lambda: self.handleStaffCreateBooking(staff),
+        ).grid(row=3, column=0, columnspan=2, pady=20)
 
-        self.selected_customer = None
-        selected_customer_label = tk.Label(
-            form_frame,
-            text="No customer selected",
-            font=("Helvetica", 10, "italic"),
-            bg="#ffffff",
-            )
+        # Back button
+        tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=lambda: self.showStaffHub(staff) if not staff.higher_admin
+                    else self.show_frame(self.adminHub, staff),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
-        selected_customer_label.grid(row=1, column=0, columnspan=2, pady=5)
+       
 
-        def lookup_customer():
-            query = customer_lookup_entry.get().strip()
-            if not query:
-                messagebox.showerror("Error", "Please enter a customer ID or email.")
-                return
-            # Try ID lookup first
-            customer = next((c for c in self.system.customers if c.customer_id == query), None)
-            if customer is None:
-                # Try email lookup
-                customer = self.system.findCustomerByEmail(query)
-            if customer is None:
-                messagebox.showerror("Error", "Customer not found.")
-                return
-            self.selected_customer = customer
-            selected_customer_label.config(text=f"Selected: {customer.first_name} {customer.surname} ({customer.email})"
-                                           )
-            tk.Button(
-                form_frame,
-                text="Search",
-                font=("Helvetica", 11),
-                command=lookup_customer,
-             ).grid(row=0, column=2, padx=5, pady=5)
-            
-            #Booking details section (same as customer booking page, but disabled until a customer is selected)
-            booking_frame = tk.Frame(frame, bg="#ffffff")
-            booking_frame.pack(pady=10, padx=20, fill="x")
-
-            tk.Label(
-                booking_frame,
-                text="Booking Details",
-                font=("Helvetica", 12, "bold"),
-                bg="#ffffff",
-                ).pack(pady=5)
-
-            details_form = tk.Frame(booking_frame, bg="#ffffff")
-            details_form.pack(pady=5)
-
-            tk.Label(
-                    details_form,
-                    text="Select date:",
-                    font=("Helvetica", 11, "bold"),
-                    bg="#ffffff",
-            ).pack(anchor="w", padx=5)
 
            
         
@@ -1285,6 +1296,94 @@ class MeowMochaApp:
         messagebox.showinfo("Updated", f"Booking {booking.booking_id} has been updated.")
         self.showCustomerViewBookingPage(customer)
 
+    def handleStaffCreateBooking(self, staff: Staff):
+        cust_str = self.staff_booking_customer_entry.get().strip()
+        if not cust_str:
+            messagebox.showerror("Error", "Please enter a customer email or ID.")
+            return
+
+        if cust_str.upper().startswith("C") and cust_str[1:].isdigit():
+          
+            customer = next((c for c in self.system.customers if c.customer_id == cust_str), None)
+        else:
+            customer = self.system.findCustomerByEmail(cust_str)
+
+        if customer is None:
+            messagebox.showerror("Error", "Customer not found. Check the email/ID.")
+            return
+        #Getting booking details from the form
+        date_str = self.staff_booking_calendar.get_date()
+        from_str = self.staff_from_combo.get()
+        to_str = self.staff_to_combo.get()
+        guests_str = self.staff_guests_spin.get()
+
+        if not (date_str and from_str and to_str and guests_str):
+            messagebox.showerror("Error", "Please select date, start time, end time and number of guests.")
+            return
+
+        try:
+            booking_date = parseDate(date_str)
+            start_time = parseTime(from_str)
+            end_time = parseTime(to_str)
+        except ValueError:
+            messagebox.showerror("Error", "Invalid date or time format.")
+            return
+
+        if end_time <= start_time:
+            messagebox.showerror("Error", "End time must be after start time.")
+            return
+
+        delta = datetime.combine(booking_date, end_time) - datetime.combine(booking_date, start_time)
+        minutes = delta.total_seconds() / 60
+        if minutes not in (30, 60):
+            messagebox.showerror("Error", "Bookings must be 30 minutes or 1 hour long.")
+            return
+
+        try:
+            guests = int(guests_str)
+            if guests <= 0:
+                raise ValueError
+        except ValueError:
+            messagebox.showerror("Error", "Number of guests must be a positive integer.")
+            return
+
+        #Find or create timeslot
+        timeslot = None
+        for ts in self.system.timeslots:
+            if ts.date == booking_date and ts.start_time == start_time and ts.end_time == end_time:
+                timeslot = ts
+                break
+
+        if timeslot is None:
+            timeslot = TimeSlot(
+                timeslot_id=self.system.generateTimeSlotID(),
+                date=booking_date,
+                start_time=start_time,
+                end_time=end_time,
+                max_capacity=8,  # or whatever
+                is_available=True,
+            )
+            self.system.timeslots.append(timeslot)
+
+        #Booking capacity logic
+        try:
+            booking = self.system.createBooking(customer, timeslot, guests)
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
+            return
+
+        self.system.saveData()
+        messagebox.showinfo(
+            "Success",
+            f"Booking {booking.booking_id} created for {customer.first_name} {customer.surname}."
+        )
+
+        # Optionally go back to hub
+        if staff.higher_admin:
+            self.show_frame(self.adminHub, staff)
+        else:
+            self.showStaffHub(staff)
+
     def staffViewCustomersPage(self, staff: Staff):
         pass
     def staffViewAllBookingsPage(self, staff: Staff):
@@ -1479,7 +1578,12 @@ class MeowMochaApp:
             command=lambda: self.manageAccountPage(admin),
         ).pack(pady=5)
 
-
+        tk.Button(
+            frame,
+            text="Create booking for customer",
+            font=("Helvetica", 14),
+            command=lambda: self.showStaffAdminBookingPage(admin),
+        ).pack(pady=5)
 
     def createStaffAccount(self, admin: Staff):
         pass
