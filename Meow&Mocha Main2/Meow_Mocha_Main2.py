@@ -714,6 +714,8 @@ class MeowMochaApp:
             font = ("Helvetica", 12),
         ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
 
+    # ------------- Customer sign up handling (validation, error messages, etc.) ------------
+
     def handleCustomerSignUp(self, first_name: str, surname: str, email: str, password: str, repeat_password: str, dob_str: str, phone: str):
       first_name = first_name.strip()
       surname = surname.strip()
@@ -782,6 +784,7 @@ class MeowMochaApp:
        
 
     #   ------------  Customer Hub here  ------------
+
     def showCustomerHub(self, customer: Customer):
         self.show_frame(self.buildCustomerHub, customer)
 
@@ -846,6 +849,12 @@ class MeowMochaApp:
             text="Create booking for customer",
             font=("Helvetica", 14),
             command=lambda: self.showStaffCreateBookingPage(staff),
+         ).pack(pady=5)
+
+         tk.Button(
+            frame,
+            text="View Customers",
+            font=("Helvetica", 14),
          ).pack(pady=5)
 
         #sign out button
@@ -1000,6 +1009,7 @@ class MeowMochaApp:
         
 
     # ------------  Staff Booking management page (same for higher and lower admins) ------------
+
     def showStaffCreateBookingPage(self,staff:Staff):
         self.show_frame(self.staffAdminBookingPage, staff)
 
@@ -1094,7 +1104,7 @@ class MeowMochaApp:
 
        
 
-
+    # -----------  Customer view and manage bookings page (edit/cancel) -----------
            
         
     def showCustomerViewBookingPage(self, customer: Customer):
@@ -1384,6 +1394,8 @@ class MeowMochaApp:
         else:
             self.showStaffHub(staff)
 
+    # ----------- Staff view customers page (for lower admins) ------------
+
 
     def showViewCustomersPage(self, staff: Staff):
         self.show_frame(self.staffViewCustomersPage, staff)
@@ -1395,6 +1407,8 @@ class MeowMochaApp:
             font=("Helvetica", 20, "bold"),
             bg="#ffffff",
         ).pack(pady=10)
+
+    # ------------  Staff view all bookings page (for both higher and lower admins) ------------
 
     def showStaffViewBookingspage(self, staff: Staff):
         # Normalised wrapper: pass the staff object as an arg to the builder
@@ -1568,7 +1582,7 @@ class MeowMochaApp:
             "Are you sure you want to delete your account? This action cannot be undone."
         )
         if not answer:
-            return  # user clicked "No"
+            return  
 
         # Remove from the correct list on SystemManager
         if isinstance(user, Customer):
@@ -1584,6 +1598,8 @@ class MeowMochaApp:
         # Send them back to main menu
         self.showMainMenu()
 
+
+# ----------- Admin hub (for higher admins) -----------
 
     def adminHub(self, frame: tk.Frame, admin: Staff):
         tk.Label(
@@ -1628,14 +1644,26 @@ class MeowMochaApp:
             
         ).pack(pady=5)
 
+    # ----------- Admin create staff account page (only accessible by higher admins) -----------
+
+
     def showStaffAccountCreationPage(self, frame: tk.Frame, admin: Staff):
         self.show_frame(self.staffAccountCreationPage, admin)
    
     def staffAccountCreationPage(self, admin: Staff):
         pass
+
+    # ------------- Admin View all accounts page (list of all customers and staff, with search) ------------
+
+    def showViewAllAccounts(self, frame: tk.Frame, admin: Staff):
+        pass
+
     def viewAllAccounts(self, admin: Staff):
         pass
-    def manageTimeSlots(self, admin: Staff): #managing time slots, toggling avaiability
+
+    # ------------ Admin time slot management page (toggling availability, setting max capacity, etc.) ------------
+
+    def manageTimeSlots(self, admin: Staff): 
         pass
 
 
@@ -1668,6 +1696,7 @@ if __name__ == "__main__":
     # ---TO DO LIST---
         # Add validation when registering customer and staff, refer to my pseudocode notes in design 
         # Complete all GUI pages and link them together
+        # Add a button to exit the app on the main menu
         # Create time slot management screen design for the documentation
         # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
         # Add creating bookings for staff and admins, and 
@@ -1678,3 +1707,4 @@ if __name__ == "__main__":
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
         # Throughly annotate my code (at the end)
 
+        
