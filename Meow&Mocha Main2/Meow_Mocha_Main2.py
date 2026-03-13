@@ -1644,6 +1644,13 @@ class MeowMochaApp:
             
         ).pack(pady=5)
 
+        tk.Button(
+            frame,
+            text="Manage time slots",
+            font=("Helvetica", 14),
+            
+        ).pack(pady=5)
+
     # ----------- Admin create staff account page (only accessible by higher admins) -----------
 
 
@@ -1663,6 +1670,9 @@ class MeowMochaApp:
 
     # ------------ Admin time slot management page (toggling availability, setting max capacity, etc.) ------------
 
+    def showManageTimeSlotsPage(self, frame: tk.Frame, admin: Staff):
+        pass
+   
     def manageTimeSlots(self, admin: Staff): 
         pass
 
@@ -1700,10 +1710,11 @@ if __name__ == "__main__":
         # Create time slot management screen design for the documentation
         # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
         # Add creating bookings for staff and admins, and 
-        # Viewing all bookings page for staff and admins
+        # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
         # View Customers page for staff and admins
         # Create staff accoiunt page for higher admins
         # View all accounts page for higher admins
+        # make the manage account button in the top right corner of every hub page, and link it to the account management page (editing details, changing password, etc.)
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
         # Throughly annotate my code (at the end)
 
