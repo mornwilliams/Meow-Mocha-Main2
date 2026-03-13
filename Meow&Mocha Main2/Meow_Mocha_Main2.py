@@ -845,7 +845,7 @@ class MeowMochaApp:
             frame,
             text="Create booking for customer",
             font=("Helvetica", 14),
-            command=lambda: self.showStaffAdminBookingPage(staff),
+            command=lambda: self.showStaffCreateBookingPage(staff),
          ).pack(pady=5)
 
         #sign out button
@@ -1384,6 +1384,10 @@ class MeowMochaApp:
         else:
             self.showStaffHub(staff)
 
+
+    def showViewCustomersPage(self, staff: Staff):
+        self.show_frame(self.staffViewCustomersPage, staff)
+
     def staffViewCustomersPage(self, staff: Staff):
         pass
     def staffViewAllBookingsPage(self, staff: Staff):
@@ -1582,7 +1586,7 @@ class MeowMochaApp:
             frame,
             text="Create booking for customer",
             font=("Helvetica", 14),
-            command=lambda: self.showStaffAdminBookingPage(admin),
+            command=lambda: self.showStaffCreateBookingPage(admin),
         ).pack(pady=5)
 
     def createStaffAccount(self, admin: Staff):
@@ -1621,13 +1625,13 @@ if __name__ == "__main__":
     # ---TO DO LIST---
         # Add validation when registering customer and staff, refer to my pseudocode notes in design 
         # Complete all GUI pages and link them together
-        # Check that the log ins work correctly - DONE
-        # Create time slot management screen design for the documentation 
-        # Add a calendar widget for selecting dates in the booking screen - DONE
-        # On application exit, save data - DONE?
-        # Organise time slots so that you can select either 30 minute sessions or 1 hour sessions
-        # change opening times for time slots (9-4pm for example)
+        # Create time slot management screen design for the documentation
         # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
-        # Add creating bookings for staff and admins, and viewing all bookings for staff and admins
-
+        # Add creating bookings for staff and admins, and 
+        # Viewing all bookings page for staff and admins
+        # View Customers page for staff and admins
+        # Create staff accoiunt page for higher admins
+        # View all accounts page for higher admins
+        # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
+        # Throughly annotate my code (at the end)
 
