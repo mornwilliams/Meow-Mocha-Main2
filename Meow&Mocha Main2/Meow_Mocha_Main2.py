@@ -1388,10 +1388,28 @@ class MeowMochaApp:
     def showViewCustomersPage(self, staff: Staff):
         self.show_frame(self.staffViewCustomersPage, staff)
 
-    def staffViewCustomersPage(self, staff: Staff):
-        pass
-    def staffViewAllBookingsPage(self, staff: Staff):
-        pass
+    def staffViewCustomersPage(self, frame: tk.Frame, staff: Staff):
+        tk.Label(
+            frame,
+            text="All customers",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+    def showStaffViewBookingspage(self, staff: Staff):
+        # Normalised wrapper: pass the staff object as an arg to the builder
+        self.show_frame(self.staffViewAllBookingsPage, staff)
+       
+    def staffViewAllBookingsPage(self, frame: tk.Frame, staff: Staff):
+       
+       tk.Label(
+            frame,
+            text="All customer bookings",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+
 
 
    #account management page for both customers and staff (editing details, changing password, etc.)
@@ -1584,17 +1602,42 @@ class MeowMochaApp:
 
         tk.Button(
             frame,
-            text="Create booking for customer",
+            text="Create a booking for a customer",
             font=("Helvetica", 14),
             command=lambda: self.showStaffCreateBookingPage(admin),
         ).pack(pady=5)
 
-    def createStaffAccount(self, admin: Staff):
+        tk.Button(
+            frame,
+            text="View all bookings",
+            font=("Helvetica", 14),
+            command=lambda a=admin: self.showStaffViewBookingspage(a)
+        ).pack(pady=5)
+
+        tk.Button(
+            frame,
+            text="View all accounts",
+            font=("Helvetica", 14),
+            
+        ).pack(pady=5)
+
+        tk.Button(
+            frame,
+            text="Create Staff Account",
+            font=("Helvetica", 14),
+            
+        ).pack(pady=5)
+
+    def showStaffAccountCreationPage(self, frame: tk.Frame, admin: Staff):
+        self.show_frame(self.staffAccountCreationPage, admin)
+   
+    def staffAccountCreationPage(self, admin: Staff):
         pass
     def viewAllAccounts(self, admin: Staff):
         pass
     def manageTimeSlots(self, admin: Staff): #managing time slots, toggling avaiability
         pass
+
 
 
 
