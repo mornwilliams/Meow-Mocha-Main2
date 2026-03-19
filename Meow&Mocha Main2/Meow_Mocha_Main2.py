@@ -1768,7 +1768,7 @@ class MeowMochaApp:
             command=lambda: self.showManageTimeSlotsPage(admin)
         ).pack(pady=5)
 
-    # ----------- Admin create staff account page (only accessible by higher admins) -----------
+# ----------- Admin create staff account page (only accessible by higher admins) -----------
 
 
     def showStaffAccountCreationPage(self, admin):
@@ -1863,7 +1863,7 @@ class MeowMochaApp:
             command=lambda: self.show_frame(self.adminHub, admin)
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
-    # ------------- Admin View all accounts page (list of all customers and staff, with search) ------------
+# ------------- Admin View all accounts page (list of all customers and staff, with search) ------------
 
     def showViewAllAccounts(self, frame: tk.Frame, admin_user: Staff):
         self.show_frame(self.viewAllAccounts, admin_user)
@@ -1933,7 +1933,7 @@ class MeowMochaApp:
             command=lambda: self.show_frame(self.adminHub, admin_user),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
-    # ------------ Admin time slot management page (toggling availability, setting max capacity, etc.) ------------
+# ------------ Admin time slot management page (toggling availability, setting max capacity, etc.) ------------
 
     def showManageTimeSlotsPage(self, frame: tk.Frame, admin: Staff):
         pass
@@ -1970,18 +1970,14 @@ if __name__ == "__main__":
 
     # ---TO DO LIST---
 
-        # Add validation when registering customer and staff, refer to my pseudocode notes in design 
-        
-        # Add a button to exit the app on the main menu
-        # Create time slot management screen design for the documentation
-        # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
-        
+      
+        # Add a button to exit the app on the main menu which also saves changes
+    
         # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
        
         # Add a search bar to the view customers page for staff
         # Add a search bar to the view all accounts page for higher admins
-        
-        
+
         # Make the manage account button in the top right corner of every hub page
 
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
