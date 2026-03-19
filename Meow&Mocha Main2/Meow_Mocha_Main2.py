@@ -159,6 +159,40 @@ class SystemManager:
         self.next_booking_id += 1
         return bID
 
+    def validateCommonRegistration(self, firstname, surname, email, phonenumber, dob, password):
+        if not firstname.strip():
+            return "Please enter first name"
+
+        if not surname.strip():
+            return "Please enter surname"
+
+        if not email.strip():
+            return "Please enter email"
+
+        if "@" not in email:
+            return "Email must contain '@'"
+
+        if not phonenumber.strip():
+            return "Please enter phone number"
+
+        if not phonenumber.isdigit():
+            return "Phone number must contain digits only"
+
+        if len(phonenumber) < 11:
+            return "Phone number must be at least 11 digits"
+
+        if not password:
+            return "Please enter a password"
+
+        if len(password) < 8:
+            return "Password must be at least 8 characters"
+
+        if dob is None:
+            return "Please enter date of birth"
+
+        return ""
+
+
     # load / save API
     def loadData(self) -> None:
         self._load_customers()
@@ -308,21 +342,31 @@ class SystemManager:
         return None
 
     # registering and logging in users here -come back to this to add validation checks 
-    def registerCustomer(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str) -> Customer:
-        customer_id = self.generateCustomerID()
-        password_hash = hashPassword(plain_password)
-        new_customer = Customer(
-            customer_id=customer_id,
-            first_name=first_name,
-            surname=surname,
-            date_of_birth=date_of_birth,
-            email=email,
-            phone_number=phone_number,
-            password_hash=password_hash
+    def registerCustomer(self, firstname, surname, dateofbirth, email, phonenumber, plainpassword):
+        if self.findCustomerByEmail(email) or self.findStaffByEmail(email):
+            raise ValueError("Email already in use")
+
+        error = self.validateCommonRegistration(firstname, surname, email, phonenumber, dateofbirth, plainpassword)
+        if error:
+            raise ValueError(error)
+
+        customerid = self.generateCustomerID()
+        passwordhash = hashPassword(plainpassword)
+
+        newcustomer = Customer(
+            customerid=customerid,
+            firstname=firstname.strip(),
+            surname=surname.strip(),
+            dateofbirth=dateofbirth,
+            email=email.strip().lower(),
+            phonenumber=phonenumber.strip(),
+            passwordhash=passwordhash
         )
-        self.customers.append(new_customer)
-        self.customers.sort(key=lambda c: c.email)  # keep sorted by email so that binary search works
-        return new_customer
+
+        self.customers.append(newcustomer)
+        self.customers.sort(key=lambda c: c.email)
+        return newcustomer
+
 
     def loginCustomer(self, email: str, plain_password: str) -> Optional[Customer]:
         found = self.findCustomerByEmail(email)
@@ -330,22 +374,32 @@ class SystemManager:
             return found
         return None
 
-    def registerStaff(self, first_name: str, surname: str, date_of_birth: date, email: str, phone_number: str, plain_password: str, higher_admin: bool) -> Staff:
-        staff_id = self.generateStaffID()
-        password_hash = hashPassword(plain_password)
-        new_staff = Staff(
-            staff_id=staff_id,
-            first_name=first_name,
-            surname=surname,
-            date_of_birth=date_of_birth,
-            email=email,
-            phone_number=phone_number,
-            password_hash=password_hash,
-            higher_admin=higher_admin
+    def registerStaff(self, firstname, surname, dateofbirth, email, phonenumber, plainpassword, higheradmin):
+        if self.findStaffByEmail(email) or self.findCustomerByEmail(email):
+            raise ValueError("Email already in use")
+
+        error = self.validateCommonRegistration(firstname, surname, email, phonenumber, dateofbirth, plainpassword)
+        if error:
+            raise ValueError(error)
+
+        staffid = self.generateStaffID()
+        passwordhash = hashPassword(plainpassword)
+
+        newstaff = Staff(
+            staffid=staffid,
+            firstname=firstname.strip(),
+            surname=surname.strip(),
+            dateofbirth=dateofbirth,
+            email=email.strip().lower(),
+            phonenumber=phonenumber.strip(),
+            passwordhash=passwordhash,
+            higheradmin=higheradmin
         )
-        self.staff.append(new_staff)
-        self.staff.sort(key=lambda s: s.email)  # keep sorted by email for the binary search 
-        return new_staff
+
+        self.staff.append(newstaff)
+        self.staff.sort(key=lambda s: s.email)
+        return newstaff
+
 
     def loginStaff(self, email: str, plain_password: str) -> Optional[Staff]:
         found = self.findStaffByEmail(email)
@@ -716,49 +770,37 @@ class MeowMochaApp:
 
     # ------------- Customer sign up handling (validation, error messages, etc.) ------------
 
-    def handleCustomerSignUp(self, first_name: str, surname: str, email: str, password: str, repeat_password: str, dob_str: str, phone: str):
-      first_name = first_name.strip()
-      surname = surname.strip()
-      email = email.strip()
-      phone = phone.strip()
-      dob_str = dob_str.strip()
+    def handleCustomerSignUp(self, firstname, surname, email, password, repeatpassword, dobstr, phone):
+        firstname = firstname.strip()
+        surname = surname.strip()
+        email = email.strip()
+        password = password.strip()
+        repeatpassword = repeatpassword.strip()
+        dobstr = dobstr.strip()
+        phone = phone.strip()
 
-      if not (first_name and surname and email and password and repeat_password and phone and dob_str):
-          messagebox.showerror("Sign up error", "All fields are required.")
-          return
+        if not firstname or not surname or not email or not password or not repeatpassword or not dobstr or not phone:
+            messagebox.showerror("Sign up error", "All fields are required.")
+            return
 
-      if password != repeat_password:
-          messagebox.showerror("Sign up error", "Passwords do not match.")
-          return
+        if password != repeatpassword:
+            messagebox.showerror("Sign up error", "Passwords do not match.")
+            return
 
-      try:
-           dob = parseDate(dob_str)
-      except ValueError:
-           messagebox.showerror("Sign up error", "Invalid date format. Please use YYYY-MM-DD.")
-           return
+        try:
+            dob = parseDate(dobstr)
+        except ValueError:
+            messagebox.showerror("Sign up error", "Invalid date format. Please use YYYY-MM-DD.")
+            return
 
-      #add more validation checks here (email format, password strength, phone number format, etc.)
+        try:
+            self.system.registerCustomer(firstname, surname, dob, email, phone, password)
+            self.system.saveData()
+            messagebox.showinfo("Sign up successful", "Your account has been created. You can now log in.")
+            self.showCustomerLogIn()
+        except ValueError as e:
+            messagebox.showerror("Sign up error", str(e))
 
-      existing = self.system.findCustomerByEmail(email)
-      if existing is not None:
-          messagebox.showerror("Sign up error", "An account with this email already exists.")
-          return
-
-      customer = self.system.registerCustomer(
-          first_name = first_name,
-          surname= surname,
-          date_of_birth= dob,
-          email=email,
-          phone_number=phone,
-          plain_password=password,
-      )
-
-      #save data after registering
-      self.system.saveData()
-
-      messagebox.showinfo("Sign up successful", "Your account has been created. You can now log in.")
-
-      self.showCustomerLogIn()
 
 
       
@@ -1702,7 +1744,7 @@ class MeowMochaApp:
             frame,
             text="View all bookings",
             font=("Helvetica", 14),
-            command=lambda a=admin: self.showStaffViewBookingspage(a)
+            command=lambda a=admin: self.showStaffViewBookingspage(admin)
         ).pack(pady=5)
 
         tk.Button(
@@ -1716,24 +1758,110 @@ class MeowMochaApp:
             frame,
             text="Create Staff Account",
             font=("Helvetica", 14),
-            
+            command=lambda: self.showStaffAccountCreationPage(admin)
         ).pack(pady=5)
 
         tk.Button(
             frame,
             text="Manage time slots",
             font=("Helvetica", 14),
-            
+            command=lambda: self.showManageTimeSlotsPage(admin)
         ).pack(pady=5)
 
     # ----------- Admin create staff account page (only accessible by higher admins) -----------
 
 
-    def showStaffAccountCreationPage(self, frame: tk.Frame, admin: Staff):
+    def showStaffAccountCreationPage(self, admin):
         self.show_frame(self.staffAccountCreationPage, admin)
    
-    def staffAccountCreationPage(self, admin: Staff):
-        pass
+    def staffAccountCreationPage(self, frame, admin):
+        tk.Label(
+            frame,
+            text="Create Staff Account",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff"
+        ).pack(pady=20)
+
+        form = tk.Frame(frame, bg="#ffffff")
+        form.pack(pady=20)
+
+        tk.Label(form, text="First Name", font=("Helvetica", 12), bg="#ffffff").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        firstnameentry = tk.Entry(form, width=30)
+        firstnameentry.grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Surname", font=("Helvetica", 12), bg="#ffffff").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        surnameentry = tk.Entry(form, width=30)
+        surnameentry.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Email", font=("Helvetica", 12), bg="#ffffff").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        emailentry = tk.Entry(form, width=30)
+        emailentry.grid(row=2, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Password", font=("Helvetica", 12), bg="#ffffff").grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        passwordentry = tk.Entry(form, width=30, show="*")
+        passwordentry.grid(row=3, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Repeat Password", font=("Helvetica", 12), bg="#ffffff").grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        repeatpasswordentry = tk.Entry(form, width=30, show="*")
+        repeatpasswordentry.grid(row=4, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Date of Birth YYYY-MM-DD", font=("Helvetica", 12), bg="#ffffff").grid(row=5, column=0, sticky="w", padx=5, pady=5)
+        dobentry = tk.Entry(form, width=30)
+        dobentry.grid(row=5, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Phone Number", font=("Helvetica", 12), bg="#ffffff").grid(row=6, column=0, sticky="w", padx=5, pady=5)
+        phoneentry = tk.Entry(form, width=30)
+        phoneentry.grid(row=6, column=1, padx=5, pady=5)
+
+        tk.Label(form, text="Higher Admin?", font=("Helvetica", 12), bg="#ffffff").grid(row=7, column=0, sticky="w", padx=5, pady=5)
+        higheradminvar = tk.BooleanVar(value=False)
+        tk.Checkbutton(form, variable=higheradminvar, bg="#ffffff").grid(row=7, column=1, sticky="w", padx=5, pady=5)
+
+        def submit():
+            firstname = firstnameentry.get().strip()
+            surname = surnameentry.get().strip()
+            email = emailentry.get().strip()
+            password = passwordentry.get().strip()
+            repeatpassword = repeatpasswordentry.get().strip()
+            dobstr = dobentry.get().strip()
+            phone = phoneentry.get().strip()
+            higheradmin = higheradminvar.get()
+
+            if not firstname or not surname or not email or not password or not repeatpassword or not dobstr or not phone:
+                messagebox.showerror("Staff sign up error", "All fields are required.")
+                return
+
+            if password != repeatpassword:
+                messagebox.showerror("Staff sign up error", "Passwords do not match.")
+                return
+
+            try:
+                dob = parseDate(dobstr)
+            except ValueError:
+                messagebox.showerror("Staff sign up error", "Invalid date format. Please use YYYY-MM-DD.")
+                return
+
+            try:
+                self.system.registerStaff(firstname, surname, dob, email, phone, password, higheradmin)
+                self.system.saveData()
+                messagebox.showinfo("Success", "Staff account created successfully.")
+                self.show_frame(self.adminHub, admin)
+            except ValueError as e:
+                messagebox.showerror("Staff sign up error", str(e))
+
+        tk.Button(
+            frame,
+            text="Create Account",
+            font=("Helvetica", 14, "bold"),
+            command=submit
+        ).pack(pady=10)
+
+        tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=lambda: self.show_frame(self.adminHub, admin)
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
     # ------------- Admin View all accounts page (list of all customers and staff, with search) ------------
 
@@ -1853,7 +1981,6 @@ if __name__ == "__main__":
         # Add a search bar to the view customers page for staff
         # Add a search bar to the view all accounts page for higher admins
         
-        # Create staff account page for higher admins
         
         # Make the manage account button in the top right corner of every hub page
 
