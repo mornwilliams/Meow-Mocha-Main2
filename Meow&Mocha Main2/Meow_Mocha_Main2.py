@@ -1841,19 +1841,22 @@ if __name__ == "__main__":
 
 
     # ---TO DO LIST---
+
         # Add validation when registering customer and staff, refer to my pseudocode notes in design 
-        # Complete all GUI pages and link them together
+        
         # Add a button to exit the app on the main menu
         # Create time slot management screen design for the documentation
         # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
-        # Add creating bookings for staff and admins, and 
+        
         # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
+       
         # Add a search bar to the view customers page for staff
         # Add a search bar to the view all accounts page for higher admins
         
-        # Create staff accoiunt page for higher admins
-        # View all accounts page for higher admins
-        # make the manage account button in the top right corner of every hub page, and link it to the account management page (editing details, changing password, etc.)
+        # Create staff account page for higher admins
+        
+        # Make the manage account button in the top right corner of every hub page
+
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
         # Throughly annotate my code (at the end)
 
