@@ -855,7 +855,16 @@ class MeowMochaApp:
             frame,
             text="View Customers",
             font=("Helvetica", 14),
+            command=lambda: self.showViewCustomersPage(staff),
          ).pack(pady=5)
+
+         tk.Button(
+             frame,
+             text="View Bookings",
+             font=("Helvetica", 14),
+             command = lambda: self.showStaffViewBookingspage(staff),
+         ).pack(pady=5)
+
 
         #sign out button
 
@@ -1400,7 +1409,7 @@ class MeowMochaApp:
     def showViewCustomersPage(self, staff: Staff):
         self.show_frame(self.staffViewCustomersPage, staff)
 
-    def staffViewCustomersPage(self, frame: tk.Frame, staff: Staff):
+    def staffViewCustomersPage(self, frame: tk.Frame, staff_user: Staff):
         tk.Label(
             frame,
             text="All customers",
@@ -1408,20 +1417,79 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
+        table_frame = tk.Frame(frame, bg="#ffffff")
+        table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        columns = ("id", "first", "surname", "email", "phone")
+
+        tree = ttk.Treeview(
+            table_frame,
+            columns=columns,
+            show="headings",
+            height=15,
+        )
+
+        tree.heading("id", text="ID")
+        tree.heading("first", text="First name")
+        tree.heading("surname", text="Surname")
+        tree.heading("email", text="Email")
+        tree.heading("phone", text="Phone")
+
+        for col in columns:
+            tree.column(col, width=120, anchor="center")
+
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        tree.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        table_frame.rowconfigure(0, weight=1)
+        table_frame.columnconfigure(0, weight=1)
+
+        # Fill with customers from SystemManager
+        for c in self.system.customers:
+            tree.insert(
+                "",
+                "end",
+                iid=c.customer_id,
+                values=(c.customer_id, c.first_name, c.surname, c.email, c.phone_number),
+            )
+
+        tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=lambda: self.showStaffHub(staff_user),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
     # ------------  Staff view all bookings page (for both higher and lower admins) ------------
 
     def showStaffViewBookingspage(self, staff: Staff):
         # Normalised wrapper: pass the staff object as an arg to the builder
         self.show_frame(self.staffViewAllBookingsPage, staff)
        
-    def staffViewAllBookingsPage(self, frame: tk.Frame, staff: Staff):
-       
-       tk.Label(
+    def staffViewAllBookingsPage(self, frame: tk.Frame, staff_user: Staff):
+
+        tk.Label(
             frame,
             text="All customer bookings",
             font=("Helvetica", 20, "bold"),
             bg="#ffffff",
         ).pack(pady=10)
+
+        tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=(
+                (lambda: self.showStaffHub(staff_user))
+                if not staff_user.higher_admin
+                else (lambda: self.show_frame(self.adminHub, staff_user))
+            ),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
+       
+
 
 
 
@@ -1536,10 +1604,17 @@ class MeowMochaApp:
             frame,
             text="Back",
             font=("Helvetica", 12),
-            command=(lambda: self.showCustomerHub(user)) if isinstance(user, Customer)
-                    else (lambda: self.showStaffHub(user) if not user.higher_admin
-                          else lambda: self.show_frame(self.adminHub, user)),
-        ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
+            command=(
+                (lambda: self.showCustomerHub(user))
+                if isinstance(user, Customer)
+                else (
+                    (lambda: self.showStaffHub(user))
+                    if not user.higher_admin
+                    else (lambda: self.show_frame(self.adminHub, user))
+                )
+            ),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
 
         tk.Button(
             frame,
@@ -1634,7 +1709,7 @@ class MeowMochaApp:
             frame,
             text="View all accounts",
             font=("Helvetica", 14),
-            
+            command=lambda a=admin: self.showViewAllAccounts(frame, a)    
         ).pack(pady=5)
 
         tk.Button(
@@ -1662,11 +1737,73 @@ class MeowMochaApp:
 
     # ------------- Admin View all accounts page (list of all customers and staff, with search) ------------
 
-    def showViewAllAccounts(self, frame: tk.Frame, admin: Staff):
-        pass
+    def showViewAllAccounts(self, frame: tk.Frame, admin_user: Staff):
+        self.show_frame(self.viewAllAccounts, admin_user)
+        
 
-    def viewAllAccounts(self, admin: Staff):
-        pass
+    def viewAllAccounts(self, frame: tk.Frame, admin_user: Staff):
+        tk.Label(
+            frame,
+            text="All accounts",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+        table_frame = tk.Frame(frame, bg="#ffffff")
+        table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        columns = ("type", "id", "first", "surname", "email", "phone")
+
+        tree = ttk.Treeview(
+            table_frame,
+            columns=columns,
+            show="headings",
+            height=18,
+        )
+
+        for col, text in zip(
+            columns,
+            ["Type", "ID", "First name", "Surname", "Email", "Phone"],
+        ):
+            tree.heading(col, text=text)
+            tree.column(col, width=110, anchor="center")
+
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        tree.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        table_frame.rowconfigure(0, weight=1)
+        table_frame.columnconfigure(0, weight=1)
+
+        # First add customers
+        for c in self.system.customers:
+            tree.insert(
+                "",
+                "end",
+                iid=c.customer_id,
+                values=("Customer", c.customer_id, c.first_name, c.surname,
+                        c.email, c.phone_number),
+            )
+
+        # Then add staff
+        for s in self.system.staff:
+            role = "Admin" if s.higher_admin else "Staff"
+            tree.insert(
+                "",
+                "end",
+                iid=s.staff_id,
+                values=(role, s.staff_id, s.first_name, s.surname,
+                        s.email, s.phone_number),
+            )
+
+        tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=lambda: self.show_frame(self.adminHub, admin_user),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
     # ------------ Admin time slot management page (toggling availability, setting max capacity, etc.) ------------
 
@@ -1689,7 +1826,7 @@ class MeowMochaApp:
 
 
 
-#---- MAIN Application loop here! --- temporary placeholder ----
+#---- MAIN Application loop here! -------
 
 if __name__ == "__main__":
     # Initialize system manager
@@ -1711,7 +1848,9 @@ if __name__ == "__main__":
         # add validation to the booking creation (e.g. cannot book in the past, cannot book more guests than max capacity, etc.)
         # Add creating bookings for staff and admins, and 
         # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
-        # View Customers page for staff and admins
+        # Add a search bar to the view customers page for staff
+        # Add a search bar to the view all accounts page for higher admins
+        
         # Create staff accoiunt page for higher admins
         # View all accounts page for higher admins
         # make the manage account button in the top right corner of every hub page, and link it to the account management page (editing details, changing password, etc.)
