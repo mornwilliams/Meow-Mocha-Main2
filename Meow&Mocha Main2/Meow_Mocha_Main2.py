@@ -1353,7 +1353,7 @@ class MeowMochaApp:
         # Refresh the view
         self.showCustomerViewBookingPage(customer)
 
-    def handleEditBooking(self, customer: Customer):
+    def handleEditBooking(self, user):
         booking = self._get_selected_booking()
         if booking is None:
             return
@@ -1367,7 +1367,7 @@ class MeowMochaApp:
             f"Enter new number of guests (current: {booking.number_of_guests}):"
         )
         if new_guests_str is None:
-            return  # user cancelled
+            return
 
         try:
             new_guests = int(new_guests_str)
@@ -1377,33 +1377,33 @@ class MeowMochaApp:
             messagebox.showerror("Error", "Please enter a positive integer.")
             return
 
-        # Find the timeslot
         ts = next((t for t in self.system.timeslots if t.timeslot_id == booking.timeslot_id), None)
         if ts is None:
             messagebox.showerror("Error", "Time slot for this booking no longer exists.")
             return
 
-        # Current guests in this slot, excluding this booking
-        current_without_this = 0
-        for b in self.system.bookings:
-            if (
-                b.timeslot_id == ts.timeslot_id
-                and b.status == "BOOKED"
-                and b.booking_id != booking.booking_id
-            ):
-                current_without_this += b.number_of_guests
+        current_without_this = sum(
+            b.number_of_guests
+            for b in self.system.bookings
+            if b.timeslot_id == ts.timeslot_id and b.status == "BOOKED" and b.booking_id != booking.booking_id
+        )
 
         if current_without_this + new_guests > ts.max_capacity:
             messagebox.showerror("Error", "Cannot update: this would exceed the time slot capacity.")
             return
 
-        # Apply update
         booking.number_of_guests = new_guests
         self.system.recalculateTimeSlotAvailability(ts)
         self.system.saveData()
 
         messagebox.showinfo("Updated", f"Booking {booking.booking_id} has been updated.")
-        self.showCustomerViewBookingPage(customer)
+
+        # navigate back appropriately
+        if isinstance(user, Customer):
+            self.showCustomerViewBookingPage(user)
+        else:  # Staff
+            # return to staff bookings view (or admin hub if you prefer)
+            self.showStaffViewBookingspage(user)
 
     def handleStaffCreateBooking(self, staff: Staff):
         cust_str = self.staff_booking_customer_entry.get().strip()
@@ -1645,7 +1645,19 @@ class MeowMochaApp:
         buttons_frame = tk.Frame(frame, bg="#ffffff")
         buttons_frame.pack(pady=10)
 
+        tk.Button(
+            buttons_frame,
+            text="Edit selected",
+            font=("Helvetica", 12),
+            command=lambda: self.handleEditBooking(staff_user),
+        ).grid(row=0, column=0, padx=5)
 
+        tk.Button(
+            buttons_frame,
+            text="Cancel selected",
+            font=("Helvetica", 12),
+            command=lambda: self.handleCancelBooking(staff_user),
+        ).grid(row=0, column=1, padx=5)
 
 
         tk.Button(
@@ -1723,6 +1735,25 @@ class MeowMochaApp:
         repeat_pass_entry = tk.Entry(form, width=30, show="*")
         repeat_pass_entry.grid(row=5, column=1, padx=5, pady=5)
 
+        tk.Label(form, text="Date of Birth (YYYY-MM-DD):", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=6, column=0, sticky="w", padx=5, pady=5)
+        dob_entry = tk.Entry(form, width=30)
+        dob_entry.grid(row=6, column=1, padx=5, pady=5)
+        dob_entry.insert(0, formatDate(user.date_of_birth))
+
+        tk.Label(form, text="Phone Number:", font=("Helvetica", 12), bg="#ffffff")\
+            .grid(row=7, column=0, sticky="w", padx=5, pady=5)
+        phone_entry = tk.Entry(form, width=30)
+        phone_entry.grid(row=7, column=1, padx=5, pady=5)
+        phone_entry.insert(0, user.phone_number)
+
+        # Higher admin checkbox (for staff only)
+        if is_staff:
+            tk.Label(form, text="Higher Admin?", font=("Helvetica", 12), bg="#ffffff")\
+                .grid(row=8, column=0, sticky="w", padx=5, pady=5)
+            higher_admin_var = tk.BooleanVar(value=user.higher_admin)
+            tk.Checkbutton(form, variable=higher_admin_var, bg="#ffffff").grid(row=8, column=1, sticky="w", padx=5, pady=5)
+
         def save_changes():
             # basic trimming + validation; expand if you like
             fn = first_entry.get().strip()
@@ -1748,6 +1779,8 @@ class MeowMochaApp:
             user.editSurname(sn)
             user.editEmail(em)
             user.editPhoneNumber(ph)
+            if is_staff:
+                user.higher_admin = higher_admin_var.get()
 
             # save to disk
             self.system.saveData()
