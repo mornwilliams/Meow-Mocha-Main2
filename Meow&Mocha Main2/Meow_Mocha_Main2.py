@@ -1973,7 +1973,7 @@ class MeowMochaApp:
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
 
-        # First add customers
+        #customers
         for c in self.system.customers:
             tree.insert(
                 "",
@@ -1983,7 +1983,7 @@ class MeowMochaApp:
                         c.email, c.phone_number),
             )
 
-        # Then add staff
+        #staff
         for s in self.system.staff:
             role = "Admin" if s.higher_admin else "Staff"
             tree.insert(
@@ -2003,11 +2003,24 @@ class MeowMochaApp:
 
 # ------------ Admin time slot management page (toggling availability, setting max capacity, etc.) ------------
 
-    def showManageTimeSlotsPage(self, frame: tk.Frame, admin: Staff):
-        pass
+    def showManageTimeSlotsPage(self, admin: Staff):
+        self.show_frame(self.manageTimeSlots, admin)
    
-    def manageTimeSlots(self, admin: Staff): 
-        pass
+    def manageTimeSlots(self, frame:tk.Frame, admin: Staff): 
+       
+       tk.Label(
+            frame,
+            text="Manage time slots",
+            font=("Helvetica", 20, "bold"),
+            bg="#ffffff",
+        ).pack(pady=10)
+
+       tk.Button(
+            frame,
+            text="Back",
+            font=("Helvetica", 12),
+            command=lambda: self.show_frame(self.adminHub, admin),
+        ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
 
 
@@ -2022,7 +2035,7 @@ class MeowMochaApp:
 
 
 
-#---- MAIN Application loop here! -------
+#---- MAIN Application loop here -------
 
 if __name__ == "__main__":
     # Initialize system manager
