@@ -462,6 +462,7 @@ class MeowMochaApp:
         self.root.minsize(1000, 650)  
 
         self.logo_image = tk.PhotoImage(file="MM3.png")
+        self.account_image= tk.PhotoImage(file="accounticon.png")
         # load data from the system manager (method exists on SystemManager)
         self.system.loadData()
         self.testStaffAccount()
@@ -832,6 +833,28 @@ class MeowMochaApp:
 
     def buildCustomerHub(self, frame:tk.Frame, customer: Customer):
         
+       
+        
+        account_button = tk.Button(
+          frame,
+          text="Manage my account",
+          image=self.account_image,
+          font=("Helvetica", 14),
+          command=lambda: self.manageAccountPage(customer),
+        )
+        account_button.pack(side="top", anchor="ne", padx=5, pady=5)
+ 
+        
+        
+        tk.Label(
+            frame,
+            text = "MY ACCOUNT",
+            font = ("Helvetica", 14, "bold"),
+            bg = "#ffffff",
+        ).pack(side="top", anchor="e", padx=5, pady=5)
+
+        
+
         tk.Label(
             frame,
             text = "Welcome to Meow&Mocha!",
@@ -854,12 +877,7 @@ class MeowMochaApp:
         ).pack(pady=5)
 
 
-        tk.Button(
-          frame,
-          text="Manage my account",
-          font=("Helvetica", 14),
-        command=lambda: self.manageAccountPage(customer),
-        ).pack(pady=5)
+        
 
 
 
