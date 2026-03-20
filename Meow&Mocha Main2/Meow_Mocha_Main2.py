@@ -4,7 +4,7 @@ import csv
 import pickle
 import os
 import tkinter as tk
-from tkinter import Frame, messagebox, Image, PhotoImage, ttk, simpledialog
+from tkinter import Entry, Frame, messagebox, Image, PhotoImage, ttk, simpledialog
 from typing import Optional
 from tkcalendar import Calendar, DateEntry
 
@@ -463,6 +463,7 @@ class MeowMochaApp:
 
         self.logo_image = tk.PhotoImage(file="MM3.png")
         self.account_image= tk.PhotoImage(file="accounticon.png")
+        self.search_image= tk.PhotoImage(file="search.png")
         # load data from the system manager (method exists on SystemManager)
         self.system.loadData()
         self.testStaffAccount()
@@ -1216,6 +1217,20 @@ class MeowMochaApp:
             font=("Helvetica", 20, "bold"),
             bg="#ffffff",
         ).pack(pady=10)
+
+        #Search bar: 
+        
+        searchbar = tk.Entry(frame, width=30)
+        searchbar.pack( padx=5, pady=5)
+
+        search_button = tk.Button(
+            frame,
+            image=self.search_image
+            
+        ).pack(padx=5, pady=5)
+
+
+
 
         # Prepare data: filter bookings for this customer
         customer_bookings = [
@@ -2142,15 +2157,6 @@ class MeowMochaApp:
 
 
 
-        
-
-
-
-
-
-
-
-
 
 #---- MAIN Application loop here -------
 
@@ -2168,12 +2174,12 @@ if __name__ == "__main__":
     # ---TO DO LIST---
 
     
-        # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
-        #   - include edit and cancel buttons for selected booking 
+        # Include a search bar for staff view all bookings page to filter out certain bookings (use my binary search)
         # Add a search bar to the view customers page for staff
         # Add a search bar to the view all accounts page for higher admins
 
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
+
         # Throughly annotate my code (at the end)
 
         
