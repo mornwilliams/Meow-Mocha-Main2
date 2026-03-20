@@ -469,6 +469,16 @@ class MeowMochaApp:
         self.current_frame = None
         self.showMainMenu()
 
+
+    def addExitButton(self, frame: tk.Frame):
+        tk.Button(
+            frame,
+            text="Exit",
+            font=("Helvetica", 12),
+            command=self.root.destroy,   
+        ).pack(side="bottom", anchor="e", padx=10, pady=10)
+
+
     def testStaffAccount(self):
         #create a test staff account if none exist (for testing purposes)
         test_email = "staff@test.com"
@@ -877,7 +887,7 @@ class MeowMochaApp:
         ).pack(pady=5)
 
 
-        
+        self.addExitButton(frame)
 
 
 
@@ -946,7 +956,7 @@ class MeowMochaApp:
          ).pack(pady=5)
 
 
-        #sign out button
+        self.addExitButton(frame)
 
 
     #   ------------  Customer Booking page ------------
@@ -1824,6 +1834,8 @@ class MeowMochaApp:
             command=lambda: self.showManageTimeSlotsPage(admin)
         ).pack(pady=5)
 
+        self.addExitButton(frame)
+
 # ----------- Admin create staff account page (only accessible by higher admins) -----------
 
 
@@ -2027,14 +2039,13 @@ if __name__ == "__main__":
     # ---TO DO LIST---
 
       
-        # Add a button to exit the app on the main menu which also saves changes
+        
     
         # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
        
         # Add a search bar to the view customers page for staff
         # Add a search bar to the view all accounts page for higher admins
 
-        # Make the manage account button in the top right corner of every hub page
 
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
         # Throughly annotate my code (at the end)
