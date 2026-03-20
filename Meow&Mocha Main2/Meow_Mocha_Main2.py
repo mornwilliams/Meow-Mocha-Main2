@@ -1222,7 +1222,7 @@ class MeowMochaApp:
             b for b in self.system.bookings
             if b.customer_id == customer.customer_id
         ]
-
+        #
         # Frame for table + scrollbar
         table_frame = tk.Frame(frame, bg="#ffffff")
         table_frame.pack(fill="both", expand=True, padx=20, pady=10)
@@ -1567,6 +1567,46 @@ class MeowMochaApp:
             font=("Helvetica", 20, "bold"),
             bg="#ffffff",
         ).pack(pady=10)
+
+        customer_bookings = [
+            b for b in self.system.bookings
+        ]
+
+        columns = ("customer","date", "start", "end", "guests", "status")
+
+        table_frame = tk.Frame(frame, bg="#ffffff")
+        table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+
+        tree = ttk.Treeview(
+            table_frame,
+            columns=columns,
+            show="headings",
+            height=10,
+        )
+
+        tree.heading("customer", text="Customer")
+        tree.heading("date", text="Date")
+        tree.heading("start", text="Start")
+        tree.heading("end", text="End")
+        tree.heading("guests", text="Guests")
+        tree.heading("status", text="Status")
+
+        tree.column("customer", width=150, anchor="center")
+        tree.column("date", width=100, anchor="center")
+        tree.column("start", width=70, anchor="center")
+        tree.column("end", width=70, anchor="center")
+        tree.column("guests", width=60, anchor="center")
+        tree.column("status", width=100, anchor="center")
+
+        # Vertical scrollbar
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        tree.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        table_frame.rowconfigure(0, weight=1)
+        table_frame.columnconfigure(0, weight=1)
 
         tk.Button(
             frame,
@@ -2015,6 +2055,10 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
+
+
+
+
        tk.Button(
             frame,
             text="Back",
@@ -2040,7 +2084,6 @@ class MeowMochaApp:
 if __name__ == "__main__":
     # Initialize system manager
     system_manager = SystemManager()
-    # no separate init() required now because __init__ performs setup
     root = tk.Tk()
 
     app = MeowMochaApp(root, system_manager)
@@ -2051,8 +2094,6 @@ if __name__ == "__main__":
 
     # ---TO DO LIST---
 
-      
-        
     
         # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
        
