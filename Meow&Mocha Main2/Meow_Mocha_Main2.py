@@ -354,13 +354,13 @@ class SystemManager:
         passwordhash = hashPassword(plainpassword)
 
         newcustomer = Customer(
-            customerid=customerid,
-            firstname=firstname.strip(),
+            customer_id=customerid,
+            first_name=firstname.strip(),
             surname=surname.strip(),
-            dateofbirth=dateofbirth,
+            date_of_birth=dateofbirth,
             email=email.strip().lower(),
-            phonenumber=phonenumber.strip(),
-            passwordhash=passwordhash
+            phone_number=phonenumber.strip(),
+            password_hash=passwordhash
         )
 
         self.customers.append(newcustomer)
@@ -1608,6 +1608,46 @@ class MeowMochaApp:
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
 
+        timeslot_by_id = {ts.timeslot_id: ts for ts in self.system.timeslots}
+
+        self.customer_bookings_tree = tree  # keep reference on self for handlers
+
+        # Insert rows
+        for booking in customer_bookings:
+            ts = timeslot_by_id.get(booking.timeslot_id)
+            if ts is None:
+                # timeslot missing; show placeholders
+                date_str = "?"
+                start_str = "?"
+                end_str = "?"
+            else:
+                # find customer object (safe lookup)
+                customer_obj = next((c for c in self.system.customers if c.customer_id == booking.customer_id), None)
+                customer_str = f"{customer_obj.first_name} {customer_obj.surname}" if customer_obj else "Unknown"
+                date_str = formatDate(ts.date)
+                start_str = formatTime(ts.start_time)
+                end_str = formatTime(ts.end_time)
+
+            tree.insert(
+                "",
+                "end",
+                iid=booking.booking_id,
+                values=(
+                    customer_str,
+                    date_str,
+                    start_str,
+                    end_str,
+                    booking.number_of_guests,
+                    booking.status,
+                ),
+            )
+
+        buttons_frame = tk.Frame(frame, bg="#ffffff")
+        buttons_frame.pack(pady=10)
+
+
+
+
         tk.Button(
             frame,
             text="Back",
@@ -2096,10 +2136,9 @@ if __name__ == "__main__":
 
     
         # Viewing all bookings page for staff and admins - include a search bar to filter by customer name or date
-       
+        #   - include edit and cancel buttons for selected booking 
         # Add a search bar to the view customers page for staff
         # Add a search bar to the view all accounts page for higher admins
-
 
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
         # Throughly annotate my code (at the end)
