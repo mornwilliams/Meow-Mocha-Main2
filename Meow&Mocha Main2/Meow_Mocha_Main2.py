@@ -833,25 +833,25 @@ class MeowMochaApp:
 
     def buildCustomerHub(self, frame:tk.Frame, customer: Customer):
         
+        top_right = tk.Frame(frame, bg="#ffffff")
+        top_right.pack(side="top", anchor="ne", padx=5, pady=5)
        
         
-        account_button = tk.Button(
-          frame,
-          text="Manage my account",
-          image=self.account_image,
-          font=("Helvetica", 14),
-          command=lambda: self.manageAccountPage(customer),
-        )
-        account_button.pack(side="top", anchor="ne", padx=5, pady=5)
- 
-        
-        
         tk.Label(
-            frame,
-            text = "MY ACCOUNT",
-            font = ("Helvetica", 14, "bold"),
-            bg = "#ffffff",
-        ).pack(side="top", anchor="e", padx=5, pady=5)
+            top_right,
+            text="MY ACCOUNT",
+            font=("Helvetica", 14, "bold"),
+            bg="#ffffff",
+        ).pack(side="left", padx=(0, 8))
+
+        account_button = tk.Button(
+            top_right,
+            text="Manage my account",
+            image=self.account_image,
+            font=("Helvetica", 14),
+            command=lambda: self.manageAccountPage(customer),
+        )
+        account_button.pack(side="left")
 
         
 
@@ -890,35 +890,55 @@ class MeowMochaApp:
         self.show_frame(self.buildStaffHub, staff)
 
     def buildStaffHub(self, frame: tk.Frame, staff: Staff):
-         tk.Label(
+         
+        top_right = tk.Frame(frame, bg="#ffffff")
+        top_right.pack(side="top", anchor="ne", padx=5, pady=5)
+       
+        
+        tk.Label(
+            top_right,
+            text="MY ACCOUNT",
+            font=("Helvetica", 14, "bold"),
+            bg="#ffffff",
+        ).pack(side="left", padx=(0, 8))
+
+        account_button = tk.Button(
+            top_right,
+            text="Manage my account",
+            image=self.account_image,
+            font=("Helvetica", 14),
+            command=lambda: self.manageAccountPage(staff),
+        )
+        account_button.pack(side="left")
+        
+        
+        
+        
+        
+        tk.Label(
             frame,
             text=f"Staff hub – welcome, {staff.first_name}",
             font=("Helvetica", 16, "bold"),
             bg="#ffffff",
          ).pack(pady=10)
 
-         tk.Button(
-             frame,
-             text="Manage my account",
-             font=("Helvetica", 14),
-             command=lambda: self.manageAccountPage(staff),
-         ).pack(pady=5)
+         
 
-         tk.Button(
+        tk.Button(
             frame,
             text="Create booking for customer",
             font=("Helvetica", 14),
             command=lambda: self.showStaffCreateBookingPage(staff),
          ).pack(pady=5)
 
-         tk.Button(
+        tk.Button(
             frame,
             text="View Customers",
             font=("Helvetica", 14),
             command=lambda: self.showViewCustomersPage(staff),
          ).pack(pady=5)
 
-         tk.Button(
+        tk.Button(
              frame,
              text="View Bookings",
              font=("Helvetica", 14),
@@ -1737,6 +1757,29 @@ class MeowMochaApp:
 # ----------- Admin hub (for higher admins) -----------
 
     def adminHub(self, frame: tk.Frame, admin: Staff):
+        
+        top_right = tk.Frame(frame, bg="#ffffff")
+        top_right.pack(side="top", anchor="ne", padx=5, pady=5)
+       
+        
+        tk.Label(
+            top_right,
+            text="MY ACCOUNT",
+            font=("Helvetica", 14, "bold"),
+            bg="#ffffff",
+        ).pack(side="left", padx=(0, 8))
+
+        account_button = tk.Button(
+            top_right,
+            text="Manage my account",
+            image=self.account_image,
+            font=("Helvetica", 14),
+            command=lambda: self.manageAccountPage(admin),
+        )
+        account_button.pack(side="left")
+       
+        
+        
         tk.Label(
             frame,
             text=f"Admin hub – welcome, {admin.first_name}",
@@ -1744,12 +1787,7 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
          
-        tk.Button(
-            frame,
-            text="Manage my account",
-            font=("Helvetica", 14),
-            command=lambda: self.manageAccountPage(admin),
-        ).pack(pady=5)
+       
 
         tk.Button(
             frame,
