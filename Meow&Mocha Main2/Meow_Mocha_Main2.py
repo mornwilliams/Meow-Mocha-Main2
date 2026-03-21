@@ -1,17 +1,15 @@
-﻿from dataclasses import dataclass, field
-from datetime import date, datetime, time, timedelta
-import csv
-import pickle
-import os
-from re import search
-import tkinter as tk
+﻿from dataclasses import dataclass, field # For data classes including Customer, Staff, TimeSlot, and Booking
+from datetime import date, datetime, time, timedelta # For handling dates, times, and durations, especially for bookings and time slots
+import csv # For reading and writing time slot and booking data in CSV format
+import pickle # For saving and loading customer and staff data in binary format, this allows me to save and load customer and staff objects with all their attributes
+import os # For checking if data files exist before trying to load them
+import tkinter as tk # Tkinter GUI module for building my application's graphical user interface, including windows, buttons, labels, and entry fields
 from tkinter import SE, Entry, Frame, messagebox, Image, PhotoImage, ttk, simpledialog
-from token import COMMA
-from typing import Optional
-from tkcalendar import Calendar, DateEntry
+from typing import Optional # For type hinting, allowing me to specify that certain functions may return a Customer, Staff, or None
+from tkcalendar import Calendar, DateEntry #Calendar widget and date entry widget for selecting dates in the GUI
 
 
-#-- password hashing, date time conversions here (helper functions)
+#-- Password hashing
 
 def hashPassword(plain:str) -> str:
     return plain[::-1]  #placeholder (not plain text)
@@ -19,7 +17,7 @@ def hashPassword(plain:str) -> str:
 def verifyPassword(plain:str, hashed:str) -> bool:
     return hashPassword(plain) == hashed
 
-#date time conversions here
+#  Date time conversions here
 def parseDate(date_str: str) -> date:
     return datetime.strptime(date_str, "%Y-%m-%d").date()
 
@@ -38,7 +36,7 @@ def parseTimeStamp(timestamp_str: str) -> datetime:
 def formatTimeStamp(timestamp_obj: datetime) -> str:
     return timestamp_obj.strftime("%Y-%m-%d %H:%M:%S")
 
-#--data classes
+# ---- Data classes for: Customer, Staff, TimeSlot, Booking ----
 
 @dataclass
 class Customer:
@@ -124,7 +122,7 @@ class Booking:
         if self.status == "BOOKED":
             self.status = "COMPLETED"
 
-#---- system manager with methods properly defined inside the class ----
+#---- System manager with methods properly defined inside the class ----
 
 class SystemManager:
     def __init__(self) -> None:
@@ -200,7 +198,7 @@ class SystemManager:
         return ""
 
 
-    # load / save API
+    # load / save 
     def loadData(self) -> None:
         self._load_customers()
         self._load_staff()
@@ -314,7 +312,8 @@ class SystemManager:
                     "booking_timestamp": formatTimeStamp(b.booking_timestamp),
                 })
 
-    # lookups and searches (binary search expects sorted lists)
+    # ----- Lookups and searches (binary search expects sorted lists)
+
     def findCustomerByEmail(self, email: str) -> Optional[Customer]:
         target = email.lower()
         left = 0
@@ -348,7 +347,8 @@ class SystemManager:
                 right = mid - 1
         return None
 
-    # registering and logging in users here -come back to this to add validation checks 
+    # ---- Registering and logging in users here --
+
     def registerCustomer(self, firstname, surname, dateofbirth, email, phonenumber, plainpassword):
         if self.findCustomerByEmail(email) or self.findStaffByEmail(email):
             raise ValueError("Email already in use")
@@ -414,7 +414,8 @@ class SystemManager:
             return found
         return None
 
-    # Time slot and capacity management
+    #  ------ Time slot and capacity management ------
+
     def currentGuestsInTimeslot(self, timeslot_id: str) -> int:
         total_guests = 0
         for booking in self.bookings:
@@ -428,7 +429,8 @@ class SystemManager:
     def recalculateTimeSlotAvailability(self, ts: TimeSlot) -> None:
         ts.is_available = not self.isTimeSlotFull(ts)
 
-    # Booking management
+    # ---- Booking management -----
+
     def createBooking(self, customer: Customer, timeslot: TimeSlot, number_of_guests: int) -> Booking:
         if not timeslot.is_available:
             raise ValueError("Time slot is not available")
@@ -453,12 +455,12 @@ class SystemManager:
 
     def cancelBooking(self, booking: Booking) -> None:
         booking.cancelBooking()
-        # update timeslot availability
+        # updates timeslot availability
         timeslot = next((ts for ts in self.timeslots if ts.timeslot_id == booking.timeslot_id), None)
         if timeslot:
             self.recalculateTimeSlotAvailability(timeslot)
 
-# -- GUI classes and functions here (login screen, main menu, etc.)
+# ---- GUI classes and functions here ----
 
 class MeowMochaApp:
     def __init__(self, root: tk.Tk, system: SystemManager):
@@ -471,7 +473,7 @@ class MeowMochaApp:
         self.logo_image = tk.PhotoImage(file="MM3.png")
         self.account_image= tk.PhotoImage(file="accounticon.png")
         self.search_image= tk.PhotoImage(file="search.png")
-        # load data from the system manager (method exists on SystemManager)
+        # load data from the system manager 
         self.system.loadData()
         self.testStaffAccount()
         self.current_frame = None
@@ -486,16 +488,16 @@ class MeowMochaApp:
             command=self.root.destroy,   
         ).pack(side="bottom", anchor="e", padx=10, pady=10)
 
+    #  ----- Test data creation (for staff accounts) ----
 
     def testStaffAccount(self):
-        #create a test staff account if none exist (for testing purposes)
         test_email = "staff@test.com"
         test_admin_email = "admin@test.com"
         existing = self.system.findStaffByEmail(test_email)
         if existing is not None:
             return
 
-        self.system.registerStaff( #<-- creates a test staff account with email "
+        self.system.registerStaff( # creating a test staff account with email "
             first_name="Test",
             surname="Staff",
             date_of_birth=parseDate("1990-01-01"),
@@ -505,7 +507,7 @@ class MeowMochaApp:
             higher_admin=False
         )
 
-        self.system.registerStaff( #<-- creates a test staff account with email "
+        self.system.registerStaff( #creates a test higher admin account with email "
             first_name="Test",
             surname="Admin",
             date_of_birth=parseDate("1990-01-01"),
@@ -516,30 +518,26 @@ class MeowMochaApp:
         )
         self.system.saveData() #save data after creating test account
 
-    def show_frame (self, builder_function, *args):
+    def show_frame (self, builder_function, *args): # to show any frame based on the builder function provided, destroys current frame if it exists, creates new frame, adds logo, and calls the builder function to populate the frame
         if self.current_frame is not None:
             self.current_frame.destroy()
         
         frame = tk.Frame(self.root, bg ="#FFFFFF")
         self.logo_image = tk.PhotoImage(file="MM3.png")
-        # shrink by factor 2 in each direction
         self.logo_image_small = self.logo_image.subsample(2, 2)
         logo_label = tk.Label(frame, image=self.logo_image_small, bg="#ffffff")
-        logo_label.image = self.logo_image_small  # keep a reference
-        logo_label = tk.Label(frame, image=self.logo_image_small, bg="#ffffff")
+        logo_label.image = self.logo_image_small  
         logo_label.pack(side="top", anchor="w", padx=10, pady=10)
-
 
 
         frame.pack(padx=20, pady=10,fill="both", expand=True )
         self.current_frame = frame
 
-        builder_function(frame, *args) #Call a "builder function" to populate the frame
+        builder_function(frame, *args) # Populates the frame based on the builder function provided (e.g., main menu, login page, etc.)
    
        
     def showMainMenu(self):
         self.show_frame(self.build_main_menu)
-
 
     def build_main_menu(self, frame: tk.Frame):
        
@@ -564,8 +562,6 @@ class MeowMochaApp:
             font = ("Helvetica", 16),
             width=20,
             command= self.showStaffLogIn
-            #command will go here (show_staff_login)
-            
         ).pack(pady=5)#
         
 
@@ -574,7 +570,7 @@ class MeowMochaApp:
     def showCustomerLogIn(self):
         self.show_frame(self.buildCustomerLogInPortal)
 
-    def buildCustomerLogInPortal(self, frame: tk.Frame): #Might change this - may add these as functions inside building main menu, destrpy label to switch page 
+    def buildCustomerLogInPortal(self, frame: tk.Frame): 
         tk.Label(
             frame,
             text="Customer Login",
@@ -639,7 +635,7 @@ class MeowMochaApp:
        
         self.showCustomerHub(customer)
 
-
+    # ---- Customer sign up portal and handling here ----
 
     def showCustomerSignUp(self):
 
@@ -738,7 +734,6 @@ class MeowMochaApp:
                 repeatpassword_entry.get(),
                 dob_entry.get(),
                 phone_entry.get()
-                #Date of birth entry to be added later 
                 ),
         ).pack(pady=10)
 
@@ -749,7 +744,7 @@ class MeowMochaApp:
             font = ("Helvetica", 12),
         ).pack (side= "bottom" , anchor="w",padx= 10, pady=10)
 
-    #Staff Portals for LOG IN here
+    # ----- Staff log in portal and handling here -----
 
     def showStaffLogIn(self):
         self.show_frame(self.buildStaffLogInPortal)
@@ -763,7 +758,7 @@ class MeowMochaApp:
         ).pack(pady=35)
 
         form = tk.Frame(frame, bg="#ffffff")
-        form.pack(pady=10)  #A sub frame so a grid can be used for the form entries
+        form.pack(pady=10)  
 
         tk.Label(form,font = ("Helvetica", 12), text="Email:", bg="#ffffff").grid(row=0, column=0, padx=5, pady=5, sticky="w")
         email_entry = tk.Entry(form, width=30)
@@ -776,8 +771,7 @@ class MeowMochaApp:
         tk.Button(
             frame,
             text="Log in",
-            command=lambda: self.handle_staff_login(email_entry.get(),
-                                                       password_entry.get()),
+            command=lambda: self.handle_staff_login(email_entry.get(), password_entry.get()),
         ).pack(pady=10)
 
         tk.Button(
@@ -821,8 +815,6 @@ class MeowMochaApp:
             messagebox.showerror("Sign up error", str(e))
 
 
-
-      
     #   ------------  Staff login handling here  ------------    
 
     def handle_staff_login(self, email: str, password: str):
@@ -871,8 +863,6 @@ class MeowMochaApp:
         )
         account_button.pack(side="left")
 
-        
-
         tk.Label(
             frame,
             text = "Welcome to Meow&Mocha!",
@@ -896,11 +886,6 @@ class MeowMochaApp:
 
 
         self.addExitButton(frame)
-
-
-
-
-        #sign out button
 
     #   ------------  Staff Hub here    ------------
 
@@ -928,19 +913,13 @@ class MeowMochaApp:
             command=lambda: self.manageAccountPage(staff),
         )
         account_button.pack(side="left")
-        
-        
-        
-        
-        
+      
         tk.Label(
             frame,
             text=f"Staff hub – welcome, {staff.first_name}",
             font=("Helvetica", 16, "bold"),
             bg="#ffffff",
          ).pack(pady=10)
-
-         
 
         tk.Button(
             frame,
@@ -963,9 +942,7 @@ class MeowMochaApp:
              command = lambda: self.showStaffViewBookingspage(staff),
          ).pack(pady=5)
 
-
         self.addExitButton(frame)
-
 
     #   ------------  Customer Booking page ------------
 
@@ -973,7 +950,6 @@ class MeowMochaApp:
         self.show_frame(self.customerBookingPage, customer)
         
     def customerBookingPage(self, frame:tk.Frame, customer: Customer):
-
         tk.Label(
             frame,
             text="Make a Booking",
@@ -1021,7 +997,7 @@ class MeowMochaApp:
 
         tk.Label(right, text="Number of guests:", font=("Helvetica", 12), bg="#ffffff")\
                 .grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        self.guests_spin = tk.Spinbox(right, from_=1, to=10, width=5)  # adjust max as needed
+        self.guests_spin = tk.Spinbox(right, from_=1, to=10, width=5) 
         self.guests_spin.grid(row=2, column=1, padx=5, pady=5)
 
         tk.Button(
@@ -1037,7 +1013,6 @@ class MeowMochaApp:
             font=("Helvetica", 12),
             command=lambda: self.showCustomerHub(customer),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
-
 
 # ---------- Booking creation logic (validation, capacity checks, etc.) ----------
 
@@ -1089,31 +1064,28 @@ class MeowMochaApp:
                 break
 
         if timeslot is None:
-            # Default capacity, adjust as you like
             timeslot = TimeSlot(
                 timeslot_id=self.system.generateTimeSlotID(),
                 date=booking_date,
                 start_time=start_time,
                 end_time=end_time,
-                max_capacity=8,  # e.g. 8 people per slot
+                max_capacity=8,  #8 people per slot
                 is_available=True,
             )
             self.system.timeslots.append(timeslot)
 
-        # Use existing capacity logic in SystemManager
         try:
             booking = self.system.createBooking(customer, timeslot, guests)
         except ValueError as e:
             messagebox.showerror("Error", str(e))
             return
 
-        # Persist to CSV + update availability flags
+        # Persist to CSV + update availability
         self.system.saveData()
         messagebox.showinfo("Success", f"Booking {booking.booking_id} created.")
-        # Optionally return to hub:
+
         self.showCustomerHub(customer)
 
-        
 
     # ------------  Staff Booking management page (same for higher and lower admins) ------------
 
@@ -1128,7 +1100,6 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
-        # Top: customer lookup
         top = tk.Frame(frame, bg="#ffffff")
         top.pack(pady=5)
 
@@ -1142,7 +1113,7 @@ class MeowMochaApp:
         self.staff_booking_customer_entry = tk.Entry(top, width=30)
         self.staff_booking_customer_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        # Left: calendar
+        #Calendar 
         cal_frame = tk.Frame(frame, bg="#ffffff")
         cal_frame.pack(side="left", padx=20, pady=10)
 
@@ -1160,7 +1131,7 @@ class MeowMochaApp:
         )
         self.staff_booking_calendar.pack(pady=5)
 
-        # Right: time + guests
+        # Time and guest selection on the right
         right = tk.Frame(frame, bg="#ffffff")
         right.pack(side="left", padx=40, pady=10, fill="y")
 
@@ -1209,11 +1180,9 @@ class MeowMochaApp:
                     else self.show_frame(self.adminHub, staff),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
-       
-
+      
     # -----------  Customer view and manage bookings page (edit/cancel) -----------
            
-        
     def showCustomerViewBookingPage(self, customer: Customer):
         self.show_frame(self.customerViewBookingPage, customer)
 
@@ -1225,14 +1194,12 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
-        
-        # Prepare data: filter bookings for this customer
         customer_bookings = [
             b for b in self.system.bookings
             if b.customer_id == customer.customer_id
         ]
-        #
-        # Frame for table + scrollbar
+        
+        # Frame for table and scrollbar
         table_frame = tk.Frame(frame, bg="#ffffff")
         table_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -1267,16 +1234,15 @@ class MeowMochaApp:
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
 
-        # Build a quick lookup for timeslots
         timeslot_by_id = {ts.timeslot_id: ts for ts in self.system.timeslots}
 
-        self.customer_bookings_tree = tree  # keep reference on self for handlers
+        self.customer_bookings_tree = tree 
 
         # Insert rows
         for booking in customer_bookings:
             ts = timeslot_by_id.get(booking.timeslot_id)
             if ts is None:
-                # timeslot missing; show placeholders
+                # Placeholders in case timeslot was deleted after booking was made - should not normally happen, but just in case
                 date_str = "?"
                 start_str = "?"
                 end_str = "?"
@@ -1314,8 +1280,7 @@ class MeowMochaApp:
             font=("Helvetica", 12),
             command=lambda: self.handleCancelBooking(customer),
         ).grid(row=0, column=1, padx=5)
-
-
+        
         # Back button
         tk.Button(
             frame,
@@ -1331,7 +1296,7 @@ class MeowMochaApp:
             messagebox.showerror("Error", "Please select a booking first.")
             return None
 
-        booking_id = selected[0]  # because iid=booking_id
+        booking_id = selected[0] 
         booking = next((b for b in self.system.bookings if b.booking_id == booking_id), None)
         if booking is None:
             messagebox.showerror("Error", "Selected booking not found.")
@@ -1352,7 +1317,6 @@ class MeowMochaApp:
         )
         if not confirm:
             return
-
         # Update booking and timeslot availability
         self.system.cancelBooking(booking)
         self.system.saveData()
@@ -1407,11 +1371,9 @@ class MeowMochaApp:
 
         messagebox.showinfo("Updated", f"Booking {booking.booking_id} has been updated.")
 
-        # navigate back appropriately
         if isinstance(user, Customer):
             self.showCustomerViewBookingPage(user)
-        else:  # Staff
-            # return to staff bookings view (or admin hub if you prefer)
+        else: 
             self.showStaffViewBookingspage(user)
 
     def handleStaffCreateBooking(self, staff: Staff):
@@ -1478,7 +1440,7 @@ class MeowMochaApp:
                 date=booking_date,
                 start_time=start_time,
                 end_time=end_time,
-                max_capacity=8,  # or whatever
+                max_capacity=8,  
                 is_available=True,
             )
             self.system.timeslots.append(timeslot)
@@ -1504,7 +1466,6 @@ class MeowMochaApp:
 
     # ----------- Staff view customers page and helper funcitions (for lower admins) ------------
    
-
     def showViewCustomersPage(self, staff: Staff):
         self.show_frame(self.staffViewCustomersPage, staff)
 
@@ -1516,7 +1477,7 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
-        # --- Search bar ---
+        # Search bar
         search_frame = tk.Frame(frame, bg="#ffffff")
         search_frame.pack(pady=5)
 
@@ -1546,7 +1507,7 @@ class MeowMochaApp:
             font=("Helvetica", 10),
         ).pack(side="left", padx=5)
 
-        # --- Table ---
+        # Table of customers
         table_frame = tk.Frame(frame, bg="#ffffff")
         table_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -1558,7 +1519,7 @@ class MeowMochaApp:
             show="headings",
             height=15,
         )
-        self.staff_customers_tree = tree  # keep reference
+        self.staff_customers_tree = tree 
 
         tree.heading("id", text="ID")
         tree.heading("first", text="First name")
@@ -1578,7 +1539,7 @@ class MeowMochaApp:
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
 
-        # initial fill
+        # Initial fill
         self.populateCustomersTree()
 
         tk.Button(
@@ -1590,7 +1551,6 @@ class MeowMochaApp:
 
     def populateCustomersTree(self, filter_text: str = ""):
             tree = self.staff_customers_tree
-            # clear
             for iid in tree.get_children():                tree.delete(iid)
             ft = filter_text.lower().strip()
             for c in self.system.customers:
@@ -1613,7 +1573,6 @@ class MeowMochaApp:
         text = self.customer_search_var.get().strip()
         tree = self.staff_customers_tree
 
-        # clear the current rows
         for iid in tree.get_children():
             tree.delete(iid)
 
@@ -1660,7 +1619,6 @@ class MeowMochaApp:
     # ------------  Staff view all bookings page (for both higher and lower admins) ------------
 
     def showStaffViewBookingspage(self, staff: Staff):
-        # Normalised wrapper: pass the staff object as an arg to the builder
         self.show_frame(self.staffViewAllBookingsPage, staff)
        
     def staffViewAllBookingsPage(self, frame: tk.Frame, staff_user: Staff):
@@ -1731,7 +1689,7 @@ class MeowMochaApp:
         tree.column("guests", width=60, anchor="center")
         tree.column("status", width=100, anchor="center")
 
-        # Vertical scrollbar
+        # Implementing vertical scrollbar
         scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=scrollbar.set)
 
@@ -1743,7 +1701,7 @@ class MeowMochaApp:
 
         timeslot_by_id = {ts.timeslot_id: ts for ts in self.system.timeslots}
 
-        self.customer_bookings_tree = tree  # keep reference on self for handlers
+        self.customer_bookings_tree = tree  
 
         self.populateBookingsTree("")
 
@@ -1780,7 +1738,7 @@ class MeowMochaApp:
     def populateBookingsTree(self, filter_text: str = ""):
         tree = self.customer_bookings_tree
 
-        # clear all rows
+        # Clears the current rows 
         for iid in tree.get_children():
             tree.delete(iid)
 
@@ -1842,10 +1800,10 @@ class MeowMochaApp:
 
        
 
-   #account management page for both customers and staff (editing details, changing password, etc.)
+   # ----- Account management page for both customers and staff (editing details, changing password, etc.)
 
     def manageAccountPage(self, user):
-    # user is either a Customer or Staff
+    #  Passes through user to ensure the same page can be used for both customers and staff
         self.show_frame(self.buildManageAccountPage, user)
 
 
@@ -1862,35 +1820,30 @@ class MeowMochaApp:
         form = tk.Frame(frame, bg="#ffffff")
         form.pack(pady=10)
 
-        # First name
         tk.Label(form, text="First name:", font=("Helvetica", 12), bg="#ffffff")\
             .grid(row=0, column=0, sticky="w", padx=5, pady=5)
         first_entry = tk.Entry(form, width=30)
         first_entry.grid(row=0, column=1, padx=5, pady=5)
         first_entry.insert(0, user.first_name)
 
-        # Surname
         tk.Label(form, text="Surname:", font=("Helvetica", 12), bg="#ffffff")\
             .grid(row=1, column=0, sticky="w", padx=5, pady=5)
         surname_entry = tk.Entry(form, width=30)
         surname_entry.grid(row=1, column=1, padx=5, pady=5)
         surname_entry.insert(0, user.surname)
 
-        # Email
         tk.Label(form, text="Email:", font=("Helvetica", 12), bg="#ffffff")\
             .grid(row=2, column=0, sticky="w", padx=5, pady=5)
         email_entry = tk.Entry(form, width=30)
         email_entry.grid(row=2, column=1, padx=5, pady=5)
         email_entry.insert(0, user.email)
 
-        # Phone
         tk.Label(form, text="Phone number:", font=("Helvetica", 12), bg="#ffffff")\
             .grid(row=3, column=0, sticky="w", padx=5, pady=5)
         phone_entry = tk.Entry(form, width=30)
         phone_entry.grid(row=3, column=1, padx=5, pady=5)
         phone_entry.insert(0, user.phone_number)
 
-        # Optional: change password fields
         tk.Label(form, text="New password:", font=("Helvetica", 12), bg="#ffffff")\
             .grid(row=4, column=0, sticky="w", padx=5, pady=5)
         new_pass_entry = tk.Entry(form, width=30, show="*")
@@ -1908,15 +1861,8 @@ class MeowMochaApp:
         dob_entry.insert(0, formatDate(user.date_of_birth))
 
         
-        # Higher admin checkbox (for staff only)
-        if is_staff:
-            tk.Label(form, text="Higher Admin?", font=("Helvetica", 12), bg="#ffffff")\
-                .grid(row=8, column=0, sticky="w", padx=5, pady=5)
-            higher_admin_var = tk.BooleanVar(value=user.higher_admin)
-            tk.Checkbutton(form, variable=higher_admin_var, bg="#ffffff").grid(row=8, column=1, sticky="w", padx=5, pady=5)
 
         def save_changes():
-            # basic trimming + validation; expand if you like
             fn = first_entry.get().strip()
             sn = surname_entry.get().strip()
             em = email_entry.get().strip()
@@ -1945,24 +1891,21 @@ class MeowMochaApp:
                 if new_pw != rep_pw:
                     messagebox.showerror("Error", "New passwords do not match.")
                     return
-                # update password hash
+                # Updates password if a new one was entered
                 user.setPassword(new_pw)
 
-            # update fields on the object
+            # Updates new fields
             user.editFirstName(fn)
             user.editSurname(sn)
             user.editEmail(em)
             user.editPhoneNumber(ph)
             user.editDateOfBirth(new_dob)
-            if is_staff:
-                user.higher_admin = higher_admin_var.get()
-
-            # save to disk
+            
             self.system.saveData()
 
             messagebox.showinfo("Saved", "Your account details have been updated.")
 
-            # go back to appropriate hub
+            # Goes back to the correct hub depending on the type of user
             if isinstance(user, Customer):
                 self.showCustomerHub(user)
             else:
@@ -1993,14 +1936,12 @@ class MeowMochaApp:
             ),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
-
         tk.Button(
             frame,
             text="Log out",
             font=("Helvetica", 12),
             command=self.logout,
         ).pack(pady=5)
-
 
         tk.Button(
             frame,
@@ -2013,7 +1954,7 @@ class MeowMochaApp:
 # ----------- Log out function, used by both staff and customers (just goes back to main menu) -------
 
     def logout(self):
-        # Optionally show a confirmation
+        # Confirmation to logout 
         answer = messagebox.askyesno(
             "Log out",
             "Are you sure you want to log out?"
@@ -2021,15 +1962,12 @@ class MeowMochaApp:
         if not answer:
             return
 
-        # Simply go back to the main menu
         self.showMainMenu()
-
-
 
 # ------- Delete account function, used by both staff and customers -------
 
     def deleteAccount(self, user):
-        # Ask for confirmation
+        # Asks the user for confirmation before deleting their account. If they confirm, deletes the account and all associated data, then returns to the main menu.
         answer = messagebox.askyesno(
             "Confirm delete",
             "Are you sure you want to delete your account? This action cannot be undone."
@@ -2037,18 +1975,16 @@ class MeowMochaApp:
         if not answer:
             return  
 
-        # Remove from the correct list on SystemManager
+        # Removes from the correct list on SystemManager
         if isinstance(user, Customer):
             self.system.customers = [c for c in self.system.customers if c.customer_id != user.customer_id]
         elif isinstance(user, Staff):
             self.system.staff = [s for s in self.system.staff if s.staff_id != user.staff_id]
 
-        # Save changes
         self.system.saveData()
 
         messagebox.showinfo("Account deleted", "Your account has been deleted.")
 
-        # Send them back to main menu
         self.showMainMenu()
 
 
@@ -2262,9 +2198,6 @@ class MeowMochaApp:
             font= ("Helvetica", 10),
             ).pack(side="left", padx=5)
 
-
-
-
         table_frame = tk.Frame(frame, bg="#ffffff")
         table_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -2309,7 +2242,6 @@ class MeowMochaApp:
 
         ft = filter_text.lower().strip()
 
-        # customers
         for c in self.system.customers:
             values = (
                 "Customer",
@@ -2325,7 +2257,6 @@ class MeowMochaApp:
                     continue
             tree.insert("", "end", iid=f"C-{c.customer_id}", values=values)
 
-        # staff
         for s in self.system.staff:
             role = "Admin" if s.higher_admin else "Staff"
             values = (
@@ -2346,21 +2277,20 @@ class MeowMochaApp:
         text = self.accounts_search_var.get().strip()
         tree = self.accounts_tree
 
-        # clear current rows
+        # Clears the current rows in the tree
         for iid in tree.get_children():
             tree.delete(iid)
 
         if not text:
-            # no search: show all
             self._populateAccountsTree("")
             return
 
-        # If it looks like an email, try exact email lookups first
+        # Exact email match shortcut (binary search on sorted emails)
         if "@" in text:
             customer = self.system.findCustomerByEmail(text)
             staff = self.system.findStaffByEmail(text)
 
-            # show customer match if found
+            # Show customer match if it is found
             if customer is not None:
                 tree.insert(
                     "",
@@ -2376,8 +2306,6 @@ class MeowMochaApp:
                     ),
                 )
 
-            # show staff match if found (could be both if email duplicated, but your
-            # registration logic forbids that)
             if staff is not None:
                 role = "Admin" if staff.higher_admin else "Staff"
                 tree.insert(
@@ -2394,15 +2322,14 @@ class MeowMochaApp:
                     ),
                 )
 
-            # if we found at least one exact email, stop here
+            # if found at least one exact email, it will stop here and not do the broad search
             if customer is not None or staff is not None:
                 return
-            # else fall through to generic substring search
+            
 
-        # Generic substring search across all fields (customers + staff)
+        # Generic substring search across all customer and staff fields
         ft = text.lower()
 
-        # customers
         for c in self.system.customers:
             values = (
                 "Customer",
@@ -2416,7 +2343,6 @@ class MeowMochaApp:
             if ft in haystack:
                 tree.insert("", "end", iid=f"C-{c.customer_id}", values=values)
 
-        # staff
         for s in self.system.staff:
             role = "Admin" if s.higher_admin else "Staff"
             values = (
@@ -2454,7 +2380,7 @@ class MeowMochaApp:
         main = tk.Frame(frame, bg="#ffffff")
         main.pack(padx=20, pady=10, fill="both", expand=True)
 
-        # ----- Left: calendar -----
+        # Calendar for selecting date, displayed on the left of the screen
         cal_frame = tk.Frame(main, bg="#ffffff")
         cal_frame.pack(side="left", padx=20, pady=10)
 
@@ -2468,11 +2394,11 @@ class MeowMochaApp:
         self.timeslot_calendar = Calendar(
             cal_frame,
             selectmode="day",
-            date_pattern="yyyy-mm-dd",  # matches parseDate/formatDate
+            date_pattern="yyyy-mm-dd", 
         )
         self.timeslot_calendar.pack(pady=5)
 
-        # ----- Right: time + actions -----
+        
         right = tk.Frame(main, bg="#ffffff")
         right.pack(side="left", padx=40, pady=10, fill="y")
 
@@ -2484,10 +2410,10 @@ class MeowMochaApp:
         )
 
         times = []
-        for h in range(9, 16):          # 09:00 to 15:30 start times, like your booking pages
+        for h in range(9, 16): 
             for m in (0, 30):
                 times.append(f"{h:02d}:{m:02d}")
-        times.append("16:00")           # valid end time but not start time
+        times.append("16:00")   
 
         self.manage_from_combo = ttk.Combobox(
             right, values=times, width=10, state="readonly"
@@ -2499,7 +2425,7 @@ class MeowMochaApp:
         )
         self.manage_to_combo.grid(row=1, column=1, padx=5, pady=5)
 
-        # Info label to show current status of the selected slot
+        # label to show current status of the selected slot
         self.timeslot_status_label = tk.Label(
             right,
             text="Select date and times, then click 'Toggle'.",
@@ -2543,14 +2469,14 @@ class MeowMochaApp:
             messagebox.showerror("Error", "End time must be after start time.")
             return
 
-        # same 30/60-min rule as bookings
+        # 30-60 minute slots logic 
         delta = datetime.combine(slot_date, end_time) - datetime.combine(slot_date, start_time)
         minutes = delta.total_seconds() / 60
         if minutes not in (30, 60):
             messagebox.showerror("Error", "Time slots must be 30 minutes or 1 hour long.")
             return
 
-        # find existing timeslot
+        # Find existing timeslot
         ts = None
         for t in self.system.timeslots:
             if t.date == slot_date and t.start_time == start_time and t.end_time == end_time:
@@ -2558,21 +2484,18 @@ class MeowMochaApp:
                 break
 
         if ts is None:
-            # create a new timeslot and set initial availability (here we default to available)
+            # Create a new timeslot, set to available
             ts = TimeSlot(
                 timeslot_id=self.system.generateTimeSlotID(),
                 date=slot_date,
                 start_time=start_time,
                 end_time=end_time,
-                max_capacity=8,   # or whatever your default is
+                max_capacity=8,  
                 is_available=True,
             )
             self.system.timeslots.append(ts)
-
-        # Toggle availability
-        ts.is_available = not ts.is_available
-
-        # Persist to CSV
+        
+        ts.is_available = not ts.is_available # This toggles availability, allowing admins to both disable and enable time slots as needed
         self.system._save_timeslots()
 
         status_text = "available" if ts.is_available else "unavailable"
@@ -2583,24 +2506,12 @@ class MeowMochaApp:
 
 
 
-
-
-
-#---- MAIN Application loop here -------
+#---- MAIN Application here -------
 
 if __name__ == "__main__":
-    # Initialize system manager
     system_manager = SystemManager()
     root = tk.Tk()
-
     app = MeowMochaApp(root, system_manager)
-    root.mainloop() #wait for events 
-
-
-
-
-    # ---TO DO LIST---
-
-        # Throughly annotate my code (at the end)
+    root.mainloop() 
 
         
