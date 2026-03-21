@@ -3,8 +3,10 @@ from datetime import date, datetime, time, timedelta
 import csv
 import pickle
 import os
+from re import search
 import tkinter as tk
-from tkinter import Entry, Frame, messagebox, Image, PhotoImage, ttk, simpledialog
+from tkinter import SE, Entry, Frame, messagebox, Image, PhotoImage, ttk, simpledialog
+from token import COMMA
 from typing import Optional
 from tkcalendar import Calendar, DateEntry
 
@@ -1508,8 +1510,8 @@ class MeowMochaApp:
         else:
             self.showStaffHub(staff)
 
-    # ----------- Staff view customers page (for lower admins) ------------
-
+    # ----------- Staff view customers page and helper funcitions (for lower admins) ------------
+   
 
     def showViewCustomersPage(self, staff: Staff):
         self.show_frame(self.staffViewCustomersPage, staff)
@@ -1522,6 +1524,37 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
+        # --- Search bar ---
+        search_frame = tk.Frame(frame, bg="#ffffff")
+        search_frame.pack(pady=5)
+
+        tk.Label(
+            search_frame,
+            text="Search (name, email, ID, phone):",
+            font=("Helvetica", 10),
+            bg="#ffffff",
+        ).pack(side="left", padx=5)
+
+        self.customer_search_var = tk.StringVar()
+        search_entry = tk.Entry(search_frame, textvariable=self.customer_search_var, width=30)
+        search_entry.pack(side="left", padx=5)
+
+        tk.Button(
+            search_frame,
+            text="Search",
+            command=self.filterCustomersTable,
+            image=self.search_image,
+            font=("Helvetica", 10),
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            search_frame,
+            text="Clear",
+            command=self.clearCustomerSearch,
+            font=("Helvetica", 10),
+        ).pack(side="left", padx=5)
+
+        # --- Table ---
         table_frame = tk.Frame(frame, bg="#ffffff")
         table_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -1533,6 +1566,7 @@ class MeowMochaApp:
             show="headings",
             height=15,
         )
+        self.staff_customers_tree = tree  # keep reference
 
         tree.heading("id", text="ID")
         tree.heading("first", text="First name")
@@ -1552,14 +1586,8 @@ class MeowMochaApp:
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
 
-        # Fill with customers from SystemManager
-        for c in self.system.customers:
-            tree.insert(
-                "",
-                "end",
-                iid=c.customer_id,
-                values=(c.customer_id, c.first_name, c.surname, c.email, c.phone_number),
-            )
+        # initial fill
+        self.populateCustomersTree()
 
         tk.Button(
             frame,
@@ -1567,6 +1595,75 @@ class MeowMochaApp:
             font=("Helvetica", 12),
             command=lambda: self.showStaffHub(staff_user),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
+    def populateCustomersTree(self, filter_text: str = ""):
+            tree = self.staff_customers_tree
+            # clear
+            for iid in tree.get_children():                tree.delete(iid)
+            ft = filter_text.lower().strip()
+            for c in self.system.customers:
+               values = (
+                   c.customer_id,
+                   c.first_name,
+                   c.surname,
+                   c.email,
+                   c.phone_number,
+               )
+               if ft:
+                   haystack = " ".join(str(v) for v in values).lower()
+                   if ft not in haystack:
+                       continue
+               tree.insert("", "end", iid=c.customer_id, values=values)
+
+
+
+    def filterCustomersTable(self):
+        text = self.customer_search_var.get().strip()
+        tree = self.staff_customers_tree
+
+        # clear the current rows
+        for iid in tree.get_children():
+            tree.delete(iid)
+
+        if not text:
+            self.populateCustomersTree("")
+            return
+
+        # Exact email match using binary search
+        customer = self.system.findCustomerByEmail(text)
+        if customer is not None:
+            tree.insert(
+                "",
+                "end",
+                iid=customer.customer_id,
+                values=(
+                    customer.customer_id,
+                    customer.first_name,
+                    customer.surname,
+                    customer.email,
+                    customer.phone_number,
+                ),
+            )
+            return
+
+        # Fall back to broad substring search if there is no exact email match
+        ft = text.lower()
+        for c in self.system.customers:
+            values = (
+                c.customer_id,
+                c.first_name,
+                c.surname,
+                c.email,
+                c.phone_number,
+            )
+            haystack = " ".join(str(v) for v in values).lower()
+            if ft in haystack:
+                tree.insert("", "end", iid=c.customer_id, values=values)
+
+
+    def clearCustomerSearch(self):
+        self.customer_search_var.set("")
+        self.populateCustomersTree("")
 
     # ------------  Staff view all bookings page (for both higher and lower admins) ------------
 
@@ -2059,7 +2156,7 @@ class MeowMochaApp:
             command=lambda: self.show_frame(self.adminHub, admin)
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
 
-# ------------- Admin View all accounts page (list of all customers and staff, with search) ------------
+# ------------- Admin View all accounts page and helper functions (list of all customers and staff, with search) ------------
 
     def showViewAllAccounts(self, frame: tk.Frame, admin_user: Staff):
         self.show_frame(self.viewAllAccounts, admin_user)
@@ -2073,6 +2170,38 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
+        search_frame = tk.Frame(frame, bg="#ffffff")
+        search_frame.pack(pady=5)
+
+        tk.Label(
+            search_frame,
+            text="Search (name, email, ID, phone):",
+            font=("Helvetica", 10),
+            bg="#ffffff",
+        ).pack(side="left", padx=5)
+
+        self.accounts_search_var = tk.StringVar()
+        search_entry = tk.Entry(search_frame, textvariable=self.accounts_search_var, width=30)
+        search_entry.pack(side="left", padx=5)
+
+        tk.Button(
+            search_frame
+            , text="Search", 
+            command=self.filterAccountsTable, 
+            image=self.search_image, 
+            font=("Helvetica", 10)
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            search_frame,
+            text="Clear",  
+            command=self.clearAccountsSearch,
+            font= ("Helvetica", 10),
+            ).pack(side="left", padx=5)
+
+
+
+
         table_frame = tk.Frame(frame, bg="#ffffff")
         table_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -2085,10 +2214,9 @@ class MeowMochaApp:
             height=18,
         )
 
-        for col, text in zip(
-            columns,
-            ["Type", "ID", "First name", "Surname", "Email", "Phone"],
-        ):
+        self.accounts_tree = tree
+
+        for col, text in zip(columns, ["Type", "ID", "First name", "Surname", "Email", "Phone"]):
             tree.heading(col, text=text)
             tree.column(col, width=110, anchor="center")
 
@@ -2101,26 +2229,8 @@ class MeowMochaApp:
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
 
-        #customers
-        for c in self.system.customers:
-            tree.insert(
-                "",
-                "end",
-                iid=c.customer_id,
-                values=("Customer", c.customer_id, c.first_name, c.surname,
-                        c.email, c.phone_number),
-            )
-
-        #staff
-        for s in self.system.staff:
-            role = "Admin" if s.higher_admin else "Staff"
-            tree.insert(
-                "",
-                "end",
-                iid=s.staff_id,
-                values=(role, s.staff_id, s.first_name, s.surname,
-                        s.email, s.phone_number),
-            )
+        
+        self._populateAccountsTree()
 
         tk.Button(
             frame,
@@ -2128,6 +2238,141 @@ class MeowMochaApp:
             font=("Helvetica", 12),
             command=lambda: self.show_frame(self.adminHub, admin_user),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
+    def _populateAccountsTree(self, filter_text: str = ""):
+        tree = self.accounts_tree
+        for iid in tree.get_children():
+            tree.delete(iid)
+
+        ft = filter_text.lower().strip()
+
+        # customers
+        for c in self.system.customers:
+            values = (
+                "Customer",
+                c.customer_id,
+                c.first_name,
+                c.surname,
+                c.email,
+                c.phone_number,
+            )
+            if ft:
+                haystack = " ".join(str(v) for v in values).lower()
+                if ft not in haystack:
+                    continue
+            tree.insert("", "end", iid=f"C-{c.customer_id}", values=values)
+
+        # staff
+        for s in self.system.staff:
+            role = "Admin" if s.higher_admin else "Staff"
+            values = (
+                role,
+                s.staff_id,
+                s.first_name,
+                s.surname,
+                s.email,
+                s.phone_number,
+            )
+            if ft:
+                haystack = " ".join(str(v) for v in values).lower()
+                if ft not in haystack:
+                    continue
+            tree.insert("", "end", iid=f"S-{s.staff_id}", values=values)
+
+    def filterAccountsTable(self):
+        text = self.accounts_search_var.get().strip()
+        tree = self.accounts_tree
+
+        # clear current rows
+        for iid in tree.get_children():
+            tree.delete(iid)
+
+        if not text:
+            # no search: show all
+            self._populateAccountsTree("")
+            return
+
+        # If it looks like an email, try exact email lookups first
+        if "@" in text:
+            customer = self.system.findCustomerByEmail(text)
+            staff = self.system.findStaffByEmail(text)
+
+            # show customer match if found
+            if customer is not None:
+                tree.insert(
+                    "",
+                    "end",
+                    iid=f"C-{customer.customer_id}",
+                    values=(
+                        "Customer",
+                        customer.customer_id,
+                        customer.first_name,
+                        customer.surname,
+                        customer.email,
+                        customer.phone_number,
+                    ),
+                )
+
+            # show staff match if found (could be both if email duplicated, but your
+            # registration logic forbids that)
+            if staff is not None:
+                role = "Admin" if staff.higher_admin else "Staff"
+                tree.insert(
+                    "",
+                    "end",
+                    iid=f"S-{staff.staff_id}",
+                    values=(
+                        role,
+                        staff.staff_id,
+                        staff.first_name,
+                        staff.surname,
+                        staff.email,
+                        staff.phone_number,
+                    ),
+                )
+
+            # if we found at least one exact email, stop here
+            if customer is not None or staff is not None:
+                return
+            # else fall through to generic substring search
+
+        # Generic substring search across all fields (customers + staff)
+        ft = text.lower()
+
+        # customers
+        for c in self.system.customers:
+            values = (
+                "Customer",
+                c.customer_id,
+                c.first_name,
+                c.surname,
+                c.email,
+                c.phone_number,
+            )
+            haystack = " ".join(str(v) for v in values).lower()
+            if ft in haystack:
+                tree.insert("", "end", iid=f"C-{c.customer_id}", values=values)
+
+        # staff
+        for s in self.system.staff:
+            role = "Admin" if s.higher_admin else "Staff"
+            values = (
+                role,
+                s.staff_id,
+                s.first_name,
+                s.surname,
+                s.email,
+                s.phone_number,
+            )
+            haystack = " ".join(str(v) for v in values).lower()
+            if ft in haystack:
+                tree.insert("", "end", iid=f"S-{s.staff_id}", values=values)
+
+
+    def clearAccountsSearch(self):
+        self.accounts_search_var.set("")
+        self._populateAccountsTree("")
+
 
 # ------------ Admin time slot management page (toggling availability, setting max capacity, etc.) ------------
 
@@ -2177,7 +2422,7 @@ if __name__ == "__main__":
         # Include a search bar for staff view all bookings page to filter out certain bookings (use my binary search)
         # Add a search bar to the view customers page for staff
         # Add a search bar to the view all accounts page for higher admins
-
+        # Make password entry from signing up and account management pages masked (show="*")
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
 
         # Throughly annotate my code (at the end)
