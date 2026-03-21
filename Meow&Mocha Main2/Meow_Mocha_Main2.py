@@ -109,18 +109,13 @@ class Booking:
     customer_id: str
     timeslot_id: str
     number_of_guests: int
-    status: str #such as "BOOKED", "CANCELLED", "COMPLETED"           
+    status: str #such as "BOOKED", "CANCELLED"
     booking_timestamp: datetime = field(default_factory=datetime.now)
 
     #cancel method here
     def cancelBooking(self):
         if self.status == "BOOKED":
             self.status = "CANCELLED"
-
-    #complete method here
-    def completeBooking(self):
-        if self.status == "BOOKED":
-            self.status = "COMPLETED"
 
 #---- System manager with methods properly defined inside the class ----
 
