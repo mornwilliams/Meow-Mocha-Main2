@@ -192,6 +192,11 @@ class SystemManager:
         if dob is None:
             return "Please enter date of birth"
 
+        today = date.today()
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age < 16:
+            return "You must be at least 16 years old to create an account"
+
         return ""
 
 
@@ -1902,12 +1907,7 @@ class MeowMochaApp:
         dob_entry.grid(row=6, column=1, padx=5, pady=5)
         dob_entry.insert(0, formatDate(user.date_of_birth))
 
-        tk.Label(form, text="Phone Number:", font=("Helvetica", 12), bg="#ffffff")\
-            .grid(row=7, column=0, sticky="w", padx=5, pady=5)
-        phone_entry = tk.Entry(form, width=30)
-        phone_entry.grid(row=7, column=1, padx=5, pady=5)
-        phone_entry.insert(0, user.phone_number)
-
+        
         # Higher admin checkbox (for staff only)
         if is_staff:
             tk.Label(form, text="Higher Admin?", font=("Helvetica", 12), bg="#ffffff")\
@@ -1922,10 +1922,23 @@ class MeowMochaApp:
             em = email_entry.get().strip()
             ph = phone_entry.get().strip()
             new_pw = new_pass_entry.get()
+            dob_str = dob_entry.get().strip()
             rep_pw = repeat_pass_entry.get()
 
-            if not (fn and sn and em and ph):
-                messagebox.showerror("Error", "Name, email and phone cannot be empty.")
+            if not (fn and sn and em and ph and dob_str):
+                messagebox.showerror("Error", "Name, email, phone and DOB cannot be empty.")
+                return
+
+            try:
+                new_dob = parseDate(dob_str)
+            except ValueError:
+                messagebox.showerror("Error", "Invalid date format. Please use YYYY-MM-DD.")
+                return
+
+            today = date.today()
+            age = today.year - new_dob.year - ((today.month, today.day) < (new_dob.month, new_dob.day))
+            if age < 16:
+                messagebox.showerror("Error", "You must be at least 16 years old.")
                 return
 
             if new_pw or rep_pw:
@@ -1940,6 +1953,7 @@ class MeowMochaApp:
             user.editSurname(sn)
             user.editEmail(em)
             user.editPhoneNumber(ph)
+            user.editDateOfBirth(new_dob)
             if is_staff:
                 user.higher_admin = higher_admin_var.get()
 
