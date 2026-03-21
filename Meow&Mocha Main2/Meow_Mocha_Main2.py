@@ -689,7 +689,7 @@ class MeowMochaApp:
             bg="#ffffff",
         ).grid(row=3, column=0, sticky="w", padx=5, pady=5)
 
-        password_entry = tk.Entry(form, width=30)
+        password_entry = tk.Entry(form, width=30, show="*")
         password_entry.grid(row=3, column=1, padx=5, pady=5)
 
         tk.Label(
@@ -699,7 +699,7 @@ class MeowMochaApp:
             bg="#ffffff",
         ).grid(row=4, column=0, sticky="w", padx=5, pady=5)
 
-        repeatpassword_entry = tk.Entry(form, width=30)
+        repeatpassword_entry = tk.Entry(form, width=30, show="*")
         repeatpassword_entry.grid(row=4, column=1, padx=5, pady=5)
 
         tk.Label(
@@ -2430,21 +2430,143 @@ class MeowMochaApp:
    
     def manageTimeSlots(self, frame:tk.Frame, admin: Staff): 
        
-       tk.Label(
+        tk.Label(
             frame,
             text="Manage time slots",
             font=("Helvetica", 20, "bold"),
             bg="#ffffff",
-        ).pack(pady=10)
+         ).pack(pady=10)
 
+        main = tk.Frame(frame, bg="#ffffff")
+        main.pack(padx=20, pady=10, fill="both", expand=True)
 
+        # ----- Left: calendar -----
+        cal_frame = tk.Frame(main, bg="#ffffff")
+        cal_frame.pack(side="left", padx=20, pady=10)
 
-       tk.Button(
+        tk.Label(
+            cal_frame,
+            text="Select date",
+            font=("Helvetica", 12, "bold"),
+            bg="#ffffff",
+        ).pack(anchor="w")
+
+        self.timeslot_calendar = Calendar(
+            cal_frame,
+            selectmode="day",
+            date_pattern="yyyy-mm-dd",  # matches parseDate/formatDate
+        )
+        self.timeslot_calendar.pack(pady=5)
+
+        # ----- Right: time + actions -----
+        right = tk.Frame(main, bg="#ffffff")
+        right.pack(side="left", padx=40, pady=10, fill="y")
+
+        tk.Label(right, text="From", font=("Helvetica", 12), bg="#ffffff").grid(
+            row=0, column=0, padx=5, pady=5, sticky="w"
+        )
+        tk.Label(right, text="To", font=("Helvetica", 12), bg="#ffffff").grid(
+            row=1, column=0, padx=5, pady=5, sticky="w"
+        )
+
+        times = []
+        for h in range(9, 16):          # 09:00 to 15:30 start times, like your booking pages
+            for m in (0, 30):
+                times.append(f"{h:02d}:{m:02d}")
+        times.append("16:00")           # valid end time but not start time
+
+        self.manage_from_combo = ttk.Combobox(
+            right, values=times, width=10, state="readonly"
+        )
+        self.manage_from_combo.grid(row=0, column=1, padx=5, pady=5)
+
+        self.manage_to_combo = ttk.Combobox(
+            right, values=times, width=10, state="readonly"
+        )
+        self.manage_to_combo.grid(row=1, column=1, padx=5, pady=5)
+
+        # Info label to show current status of the selected slot
+        self.timeslot_status_label = tk.Label(
+            right,
+            text="Select date and times, then click 'Toggle'.",
+            font=("Helvetica", 10),
+            bg="#ffffff",
+        )
+        self.timeslot_status_label.grid(row=2, column=0, columnspan=2, padx=5, pady=10)
+
+        tk.Button(
+            right,
+            text="Toggle availability",
+            font=("Helvetica", 14, "bold"),
+            command=self.handleToggleAdminTimeSlot,
+        ).grid(row=3, column=0, columnspan=2, pady=10)
+
+        tk.Button(
             frame,
             text="Back",
             font=("Helvetica", 12),
             command=lambda: self.show_frame(self.adminHub, admin),
-        ).pack(side="bottom", anchor="w", padx=10, pady=10)
+         ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
+    def handleToggleAdminTimeSlot(self):
+        date_str = self.timeslot_calendar.get_date()
+        from_str = self.manage_from_combo.get()
+        to_str = self.manage_to_combo.get()
+
+        if not (date_str and from_str and to_str):
+            messagebox.showerror("Error", "Please select date, start time and end time.")
+            return
+
+        try:
+            slot_date = parseDate(date_str)
+            start_time = parseTime(from_str)
+            end_time = parseTime(to_str)
+        except ValueError:
+            messagebox.showerror("Error", "Invalid date or time format.")
+            return
+
+        if end_time <= start_time:
+            messagebox.showerror("Error", "End time must be after start time.")
+            return
+
+        # same 30/60-min rule as bookings
+        delta = datetime.combine(slot_date, end_time) - datetime.combine(slot_date, start_time)
+        minutes = delta.total_seconds() / 60
+        if minutes not in (30, 60):
+            messagebox.showerror("Error", "Time slots must be 30 minutes or 1 hour long.")
+            return
+
+        # find existing timeslot
+        ts = None
+        for t in self.system.timeslots:
+            if t.date == slot_date and t.start_time == start_time and t.end_time == end_time:
+                ts = t
+                break
+
+        if ts is None:
+            # create a new timeslot and set initial availability (here we default to available)
+            ts = TimeSlot(
+                timeslot_id=self.system.generateTimeSlotID(),
+                date=slot_date,
+                start_time=start_time,
+                end_time=end_time,
+                max_capacity=8,   # or whatever your default is
+                is_available=True,
+            )
+            self.system.timeslots.append(ts)
+
+        # Toggle availability
+        ts.is_available = not ts.is_available
+
+        # Persist to CSV
+        self.system._save_timeslots()
+
+        status_text = "available" if ts.is_available else "unavailable"
+        self.timeslot_status_label.config(
+            text=f"Time slot {formatDate(ts.date)} {formatTime(ts.start_time)}–{formatTime(ts.end_time)} is now {status_text}."
+        )
+        messagebox.showinfo("Updated", f"Time slot is now {status_text}.")
+
 
 
 
@@ -2464,12 +2586,6 @@ if __name__ == "__main__":
 
 
     # ---TO DO LIST---
-
-    
-        # Include a search bar for staff view all bookings page to filter out certain bookings (use my binary search)
-       
-        # Make password entry from signing up and account management pages masked (show="*")
-        # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
 
         # Throughly annotate my code (at the end)
 
