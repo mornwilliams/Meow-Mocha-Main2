@@ -317,7 +317,7 @@ class SystemManager:
     def findCustomerByEmail(self, email: str) -> Optional[Customer]:
         target = email.lower()
         left = 0
-        right = len(self.customers) - 1
+        right = len(self.customers) - 1 # Customers are already sorted by email after loading and after each registration, so binary search cam be used for efficiency
 
         while left <= right:
             mid = (left + right) // 2
@@ -2503,7 +2503,6 @@ class MeowMochaApp:
             text=f"Time slot {formatDate(ts.date)} {formatTime(ts.start_time)}–{formatTime(ts.end_time)} is now {status_text}."
         )
         messagebox.showinfo("Updated", f"Time slot is now {status_text}.")
-
 
 
 #---- MAIN Application here -------
