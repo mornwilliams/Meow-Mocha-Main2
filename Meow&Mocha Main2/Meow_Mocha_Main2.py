@@ -1220,20 +1220,7 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
-        #Search bar: 
         
-        searchbar = tk.Entry(frame, width=30)
-        searchbar.pack( padx=5, pady=5)
-
-        search_button = tk.Button(
-            frame,
-            image=self.search_image
-            
-        ).pack(padx=5, pady=5)
-
-
-
-
         # Prepare data: filter bookings for this customer
         customer_bookings = [
             b for b in self.system.bookings
@@ -1680,6 +1667,35 @@ class MeowMochaApp:
             bg="#ffffff",
         ).pack(pady=10)
 
+        search_frame = tk.Frame(frame, bg="#ffffff")
+        search_frame.pack(pady=5)
+
+        tk.Label(
+            search_frame,
+            text="Search (customer or date YYYY-MM-DD):",
+            font=("Helvetica", 10), 
+            bg= "#ffffff",
+        ).pack(side="left", padx=5)
+
+        self.bookings_search_var = tk.StringVar()
+        search_entry = tk.Entry(search_frame, textvariable=self.bookings_search_var, width=30)
+        search_entry.pack(side="left", padx=5)  
+
+        tk.Button(
+            search_frame,
+            text="Search",  
+            image=self.search_image,    
+            command=self.filterBookingsTable,
+        ).pack(side="left", padx=5) 
+
+        tk.Button(
+            search_frame,
+            text="Clear",
+            font=("Helvetica", 10),
+            command=self.clearBookingsSearch,
+        ).pack(side="left", padx=5)
+
+
         customer_bookings = [
             b for b in self.system.bookings
         ]
@@ -1724,35 +1740,7 @@ class MeowMochaApp:
 
         self.customer_bookings_tree = tree  # keep reference on self for handlers
 
-        # Insert rows
-        for booking in customer_bookings:
-            ts = timeslot_by_id.get(booking.timeslot_id)
-            if ts is None:
-                # timeslot missing; show placeholders
-                date_str = "?"
-                start_str = "?"
-                end_str = "?"
-            else:
-                # find customer object (safe lookup)
-                customer_obj = next((c for c in self.system.customers if c.customer_id == booking.customer_id), None)
-                customer_str = f"{customer_obj.first_name} {customer_obj.surname}" if customer_obj else "Unknown"
-                date_str = formatDate(ts.date)
-                start_str = formatTime(ts.start_time)
-                end_str = formatTime(ts.end_time)
-
-            tree.insert(
-                "",
-                "end",
-                iid=booking.booking_id,
-                values=(
-                    customer_str,
-                    date_str,
-                    start_str,
-                    end_str,
-                    booking.number_of_guests,
-                    booking.status,
-                ),
-            )
+        self.populateBookingsTree("")
 
         buttons_frame = tk.Frame(frame, bg="#ffffff")
         buttons_frame.pack(pady=10)
@@ -1782,11 +1770,72 @@ class MeowMochaApp:
                 else (lambda: self.show_frame(self.adminHub, staff_user))
             ),
         ).pack(side="bottom", anchor="w", padx=10, pady=10)
+
+
+    def populateBookingsTree(self, filter_text: str = ""):
+        tree = self.customer_bookings_tree
+
+        # clear all rows
+        for iid in tree.get_children():
+            tree.delete(iid)
+
+        ft = filter_text.lower().strip()
+        timeslot_by_id = {ts.timeslot_id: ts for ts in self.system.timeslots}
+
+        for booking in self.system.bookings:
+            ts = timeslot_by_id.get(booking.timeslot_id)
+
+            if ts is None:
+                date_str = "?"
+                start_str = "?"
+                end_str = "?"
+                customer_str = "Unknown"
+            else:
+                customer_obj = next(
+                    (c for c in self.system.customers if c.customer_id == booking.customer_id),
+                    None,
+                )
+                customer_str = (
+                    f"{customer_obj.first_name} {customer_obj.surname}"
+                    if customer_obj
+                    else "Unknown"
+                )
+                date_str = formatDate(ts.date)
+                start_str = formatTime(ts.start_time)
+                end_str = formatTime(ts.end_time)
+
+            values = (
+                customer_str,
+                date_str,
+                start_str,
+                end_str,
+                booking.number_of_guests,
+                booking.status,
+            )
+
+            if ft:
+                # allow searching by customer name, date, etc.
+                haystack = " ".join(str(v) for v in values).lower()
+                if ft not in haystack:
+                    continue
+
+            tree.insert(
+                "",
+                "end",
+                iid=booking.booking_id,
+                values=values,
+            )
+
+
+    def filterBookingsTable(self):
+        text = self.bookings_search_var.get().strip()
+        self.populateBookingsTree(text)
+
+    def clearBookingsSearch(self):
+        self.bookings_search_var.set("")
+        self.populateBookingsTree("")
+
        
-
-
-
-
 
    #account management page for both customers and staff (editing details, changing password, etc.)
 
@@ -2390,8 +2439,6 @@ class MeowMochaApp:
 
 
 
-
-
        tk.Button(
             frame,
             text="Back",
@@ -2420,8 +2467,7 @@ if __name__ == "__main__":
 
     
         # Include a search bar for staff view all bookings page to filter out certain bookings (use my binary search)
-        # Add a search bar to the view customers page for staff
-        # Add a search bar to the view all accounts page for higher admins
+       
         # Make password entry from signing up and account management pages masked (show="*")
         # Create time slot management page for higher admins (toggling availability, setting max capacity, etc.)
 
