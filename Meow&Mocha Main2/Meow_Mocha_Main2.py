@@ -1325,7 +1325,7 @@ class MeowMochaApp:
         booking = self._get_selected_booking()
         if booking is None:
             return
-
+        
         if booking.status != "BOOKED":
             messagebox.showerror("Error", "Only bookings with status BOOKED can be edited.")
             return
