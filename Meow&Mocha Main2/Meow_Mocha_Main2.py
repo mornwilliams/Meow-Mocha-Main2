@@ -376,26 +376,26 @@ class SystemManager:
             return found
         return None
 
-    def registerStaff(self, firstname, surname, dateofbirth, email, phonenumber, plainpassword, higheradmin):
+    def registerStaff(self, first_name, surname, date_of_birth, email, phone_number, plain_password, higher_admin):
         if self.findStaffByEmail(email) or self.findCustomerByEmail(email):
             raise ValueError("Email already in use")
 
-        error = self.validateCommonRegistration(firstname, surname, email, phonenumber, dateofbirth, plainpassword)
+        error = self.validateCommonRegistration(first_name, surname, email, phone_number, date_of_birth, plain_password)
         if error:
             raise ValueError(error)
 
-        staffid = self.generateStaffID()
-        passwordhash = hashPassword(plainpassword)
+        staff_id = self.generateStaffID()
+        password_hash = hashPassword(plain_password)
 
         newstaff = Staff(
-            staffid=staffid,
-            firstname=firstname.strip(),
+            staff_id=staff_id,
+            first_name=first_name.strip(),
             surname=surname.strip(),
-            dateofbirth=dateofbirth,
+            date_of_birth=date_of_birth,
             email=email.strip().lower(),
-            phonenumber=phonenumber.strip(),
-            passwordhash=passwordhash,
-            higheradmin=higheradmin
+            phone_number=phone_number.strip(),
+            password_hash=password_hash,
+            higher_admin=higher_admin,
         )
 
         self.staff.append(newstaff)
