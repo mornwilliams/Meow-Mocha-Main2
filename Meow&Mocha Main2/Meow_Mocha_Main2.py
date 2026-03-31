@@ -1311,7 +1311,7 @@ class MeowMochaApp:
             messagebox.showerror("Error", "Selected booking not found.")
         return booking
 
-    def handleCancelBooking(self, customer: Customer):
+    def handleCancelBooking(self, user):
         booking = self._get_selected_booking()
         if booking is None:
             return
@@ -1333,7 +1333,10 @@ class MeowMochaApp:
         messagebox.showinfo("Cancelled", f"Booking {booking.booking_id} has been cancelled.")
 
         # Refresh the view
-        self.showCustomerViewBookingPage(customer)
+        if isinstance(user, Customer):
+            self.showCustomerBookingPage(user)
+        else:
+            self.showStaffViewBookingspage(user)
 
     def handleEditBooking(self, user):
         booking = self._get_selected_booking()
