@@ -427,8 +427,15 @@ class SystemManager:
     # ---- Booking management -----
 
     def createBooking(self, customer: Customer, timeslot: TimeSlot, number_of_guests: int) -> Booking:
+        # Do not allow bookings for timeslots in the past
+        start_dt = datetime.combine(timeslot.date, timeslot.start_time)
+        if start_dt < datetime.now():
+            raise ValueError("Cannot create a booking in the past")
+
         if not timeslot.is_available:
             raise ValueError("Time slot is not available")
+
+        # Capacity checks
         if self.currentGuestsInTimeslot(timeslot.timeslot_id) + number_of_guests > timeslot.max_capacity:
             raise ValueError("Not enough capacity in the selected time slot")
 
@@ -436,6 +443,7 @@ class SystemManager:
         if current + number_of_guests >= timeslot.max_capacity:
             raise ValueError("Booking would exceed time slot capacity")
 
+        # All validations passed - generate booking id and persist
         booking_id = self.generateBookingID()
         new_booking = Booking(
             booking_id=booking_id,
@@ -1049,6 +1057,12 @@ class MeowMochaApp:
             messagebox.showerror("Error", "Number of guests must be a positive integer.")
             return
 
+        # Do not allow bookings in the past (avoid consuming timeslot IDs)
+        start_dt = datetime.combine(booking_date, start_time)
+        if start_dt < datetime.now():
+            messagebox.showerror("Error", "Cannot create a booking in the past.")
+            return
+
         # Find or create a matching TimeSlot
         timeslot = None
         for ts in self.system.timeslots:
@@ -1420,6 +1434,12 @@ class MeowMochaApp:
                 raise ValueError
         except ValueError:
             messagebox.showerror("Error", "Number of guests must be a positive integer.")
+            return
+
+        # Do not allow bookings in the past (avoid consuming timeslot IDs)
+        start_dt = datetime.combine(booking_date, start_time)
+        if start_dt < datetime.now():
+            messagebox.showerror("Error", "Cannot create a booking in the past.")
             return
 
         #Find or create timeslot
