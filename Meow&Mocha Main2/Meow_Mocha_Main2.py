@@ -1895,6 +1895,10 @@ class MeowMochaApp:
                 messagebox.showerror("Error", "Phone number must be at least 11 digits.")
                 return
 
+            if len(new_pw) < 8:
+                messagebox.showerror("Error", "Password must be at least 8 characters long.")
+                return
+
             today = date.today()
             age = today.year - new_dob.year - ((today.month, today.day) < (new_dob.month, new_dob.day))
             if age < 16:
