@@ -1869,11 +1869,30 @@ class MeowMochaApp:
             if not (fn and sn and em and ph and dob_str):
                 messagebox.showerror("Error", "Name, email, phone and DOB cannot be empty.")
                 return
-
+             
             try:
                 new_dob = parseDate(dob_str)
             except ValueError:
                 messagebox.showerror("Error", "Invalid date format. Please use YYYY-MM-DD.")
+                return
+
+            if not fn.replace(" ", "").isalpha():
+                messagebox.showerror("Error", "First name must only contain letters.")
+                return
+
+            if not sn.replace(" ", "").isalpha():
+                messagebox.showerror("Error", "Surname must only contain letters.")
+                return
+
+            if "@" not in em:
+                messagebox.showerror("Error", "Email must contain '@'.")
+                return
+
+            if not ph.isdigit():
+                messagebox.showerror("Error", "Phone number must contain digits only.")
+                return
+            if len(ph) < 11:
+                messagebox.showerror("Error", "Phone number must be at least 11 digits.")
                 return
 
             today = date.today()
